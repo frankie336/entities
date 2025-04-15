@@ -37,10 +37,8 @@ Perfect for advanced customization, assistant training, or building your own ext
 ```bash
 git clone https://github.com/frankie336/entities_api.git
 cd entities
-python start.py
+python start_orchestration.py
 ```
-
-
 
 ---
 
@@ -57,40 +55,57 @@ git clone https://github.com/frankie336/entities.git
 cd entities
 ```
 
-### ⚙️ 2. Bootstrap environment files
-
-```bash
-python start.py --generate-env
-```
-
-This will scaffold `.env.dev` and `.env.docker` with secure keys, MySQL credentials, and tool IDs.
-
-### 🧱 3. Build and launch containers
-
-```bash
-python start.py --mode both
-```
-
-Or skip building and run pre-published images from Docker Hub:
-
-```bash
-python start.py --mode up --no-build
-```
-
 ---
 
-## 🔄 Supported Lifecycle Commands
+## 🔄 Lifecycle Commands
 
-| Command                             | Purpose                                      |
-|-------------------------------------|----------------------------------------------|
-| `--mode build`                      | Build containers                             |
-| `--mode up`                         | Start containers                             |
-| `--mode both`                       | Build & start all containers                 |
-| `--mode up --with-ollama`           | Include Ollama container with CPU support    |
-| `--mode up --with-ollama --ollama-gpu` | Enable GPU acceleration for Ollama         |
-| `--down`                            | Stop containers                              |
-| `--down --clear-volumes`           | Stop and wipe all data volumes               |
-| `--mode up --clear-volumes`        | Full redeploy with fresh volumes             |
+
+**1. First-time start (generates .env, pulls images, starts detached)**
+
+``python start_orchestration.py``
+
+**2. Stop all services**
+
+```python start_orchestration.py --mode down_only```
+
+**3. Stop services and remove associated volumes (will prompt!)**
+
+```python start_orchestration.py --clear-volumes```
+
+**4. Restart services, ensuring latest images are pulled and containers recreated**
+
+```python start_orchestration.py --down --force-recreate```
+
+**5. Start the stack and also manage an external Ollama container**
+
+```python start_orchestration.py --with-ollama```
+
+**6. Start with external Ollama, attempting GPU passthrough**
+
+```python start_orchestration.py --with-ollama --ollama-gpu```
+
+**7. Start only the 'api' and 'db' services**
+
+```python start_orchestration.py --services api db```
+
+**8. Stop only the 'api' service**
+
+```python start_orchestration.py --mode down_only --services api```
+
+**9. Start attached to view logs immediately**
+
+```python start_orchestration.py --attached```
+
+**10. Show verbose output during startup**
+
+```python start_orchestration.py --verbose```
+
+
+**11. <span style="color:red">DANGEROUS</span>: Nuke the project and prune all Docker resources (requires confirmation)**
+
+
+```python start_orchestration.py --nuke```
+
 
 ---
 
