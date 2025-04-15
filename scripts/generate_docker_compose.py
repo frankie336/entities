@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
+import os
 import uuid
 import secrets
+from pathlib import Path
 
 def generate_docker_compose():
-    # Generate unique secrets per run
+    # Resolve the project root (assuming script is under /scripts)
+    script_dir = Path(__file__).resolve().parent
+    project_root = script_dir.parent
+    output_path = project_root / "docker-compose.yml"
+
+    # Abort if docker-compose.yml already exists
+    if output_path.exists():
+        print(f"⚠️  {output_path.name} already exists. Skipping generation.")
+        return
+
+    # 🔐 Generate unique secrets
     unique_network_secret = str(uuid.uuid4())
     unique_root_password = uuid.uuid4().hex
     unique_mysql_password = uuid.uuid4().hex
     unique_default_secret = secrets.token_urlsafe(32)
 
-    # Compose file content
+    # 🧱 Compose YAML content
     compose_yaml = f"""version: '3.8'
 
 services:
@@ -130,15 +142,15 @@ networks:
       unique_secret: "{unique_network_secret}"
 """
 
-    # Write to file
-    with open("../docker-compose.yml", "w", encoding="utf-8") as f:
-        f.write(compose_yaml)
+    # 💾 Write to file in project root
+    output_path.write_text(compose_yaml, encoding="utf-8")
 
-    print("\n✅ docker-compose.yml generated successfully with:")
-    print(f"  - Network Secret:     {unique_network_secret}")
-    print(f"  - MySQL Root PW:      {unique_root_password}")
-    print(f"  - MySQL User PW:      {unique_mysql_password}")
-    print(f"  - DEFAULT_SECRET_KEY: {unique_default_secret}\n")
+    # ✅ Status output
+    print("\n✅ docker-compose.yml generated at project root with:")
+    print(f"  - MYSQL_ROOT_PASSWORD:  {unique_root_password}")
+    print(f"  - MYSQL_PASSWORD:       {unique_mysql_password}")
+    print(f"  - DEFAULT_SECRET_KEY:   {unique_default_secret}")
+    print(f"  - Network Unique ID:    {unique_network_secret}\n")
 
 if __name__ == "__main__":
     generate_docker_compose()
