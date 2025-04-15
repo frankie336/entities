@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "entities_orchestration"
+version = "0.1.0"
+description = "Development and deployment orchestrator for the Entities platform"
+readme = "README.md"
+authors = [
+  { name = "Francis Neequaye Armah", email = "francis.neequaye@projectdavid.co.uk" }
+]
+license = { text = "PolyForm Noncommercial 1.0.0" }
+requires-python = ">=3.9"
+keywords = ["Entities", "Orchestration", "Docker", "Startup", "LLM"]
+
+dependencies = [
+  "PyYAML>=5.4",
+  "python-dotenv>=1.0"
+]
+
+[project.scripts]
+entities-dev = "start:main"
+
+[project.optional-dependencies]
+dev = [
+  "black>=23.3",
+  "isort>=5.12",
+  "pytest>=7.2",
+  "mypy>=1.0",
+  "build",
+  "twine"
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+
+[tool.semantic_release]
+version_source = "tag"
+upload_to_pypi = false
