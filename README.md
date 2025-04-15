@@ -19,6 +19,25 @@ This repository provides standalone orchestration for the full Entities stack, e
 
 ---
 
+### 🧠 Want to work directly with the Entities source code?
+
+This repository is designed for orchestrating prebuilt Entities containers.  
+If you're looking to **develop**, **extend**, or **contribute** to the Entities codebase itself, head over to:
+
+👉 **[entities](https://github.com/frankie336/entities_api)** – The full source repository containing the FastAPI backend, AI inference logic, tooling framework, and SDK.
+
+Perfect for advanced customization, assistant training, or building your own extensions.
+
+```bash
+git clone https://github.com/frankie336/entities_api.git
+cd entities
+python start.py
+```
+
+
+
+---
+
 ## 🚀 Quick Start
 
 > 🛠️ **Pre-requisites:**
