@@ -131,7 +131,7 @@ networks:
 """
 
     # Write to file
-    with open("docker-compose.yml", "w", encoding="utf-8") as f:
+    with open("../docker-compose.yml", "w", encoding="utf-8") as f:
         f.write(compose_yaml)
 
     print("\n✅ docker-compose.yml generated successfully with:")

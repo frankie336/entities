@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import argparse
-import json
 import logging
 import os
 import platform
@@ -10,10 +9,9 @@ import shutil
 import subprocess
 import sys
 import time
-from os.path import getsize, islink
 from pathlib import Path
 from urllib.parse import quote_plus  # Needed for password escaping in URL
-from generate_docker_compose import generate_docker_compose
+from scripts.generate_docker_compose import generate_docker_compose
 
 
 # Third-party import
