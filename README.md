@@ -1,5 +1,9 @@
 # 🛰️ Entities
 
+[![CI](https://github.com/frankie336/entities/actions/workflows/ci.yml/badge.svg)](https://github.com/frankie336/entities/actions/workflows/ci.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
+
+
 > 🧠 **Orchestrated AI infrastructure** for the Entities V1 system.
 
 This repository provides standalone orchestration for the full Entities stack, enabling you to spin up a complete environment with a single command. It includes Docker Compose configuration, optional Ollama GPU containers, volume management, and startup automation logic.
