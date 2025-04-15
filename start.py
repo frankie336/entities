@@ -28,6 +28,7 @@ DEFAULT_QDRANT_HTTP_PORT = "6333"
 DEFAULT_SAMBA_SERVICE_NAME = "samba"
 ADMIN_API_KEY_PREFIX = "ad_"
 
+
 class DockerManager:
     _ENV_FILE = ".env"
     _DOCKER_COMPOSE_FILE = "docker-compose.yml"
@@ -112,10 +113,10 @@ class DockerManager:
 
     def _load_compose_config(self):
         try:
-            with open(self._DOCKER_COMPOSE_FILE, 'r', encoding='utf-8') as f:
+            with open(self._DOCKER_COMPOSE_FILE, "r", encoding="utf-8") as f:
                 return yaml.safe_load(f)
-        except Exception as e:
-            self.log.warning(f"Failed to load compose config: {e}")
+        except Exception:
+            self.log.warning("Failed to load compose config", exc_info=self.args.verbose)
             return None
 
     def _get_host_port_from_compose_service(self, service, container_port):
@@ -143,12 +144,19 @@ class DockerManager:
                 env[key] = secrets.token_urlsafe(32)
 
         escaped = quote_plus(env["MYSQL_PASSWORD"])
-        db_url = f"mysql+pymysql://{env['MYSQL_USER']}:{escaped}@{env['MYSQL_HOST']}:{env['MYSQL_PORT']}/{env['MYSQL_DATABASE']}"
+        db_url = (
+            f"mysql+pymysql://{env['MYSQL_USER']}:{escaped}@"
+            f"{env['MYSQL_HOST']}:{env['MYSQL_PORT']}/{env['MYSQL_DATABASE']}"
+        )
         env["DATABASE_URL"] = db_url
 
-        host_port = self._get_host_port_from_compose_service(DEFAULT_DB_SERVICE_NAME, DEFAULT_DB_CONTAINER_PORT)
+        host_port = self._get_host_port_from_compose_service(
+            DEFAULT_DB_SERVICE_NAME, DEFAULT_DB_CONTAINER_PORT
+        )
         if host_port:
-            env["SPECIAL_DB_URL"] = db_url.replace(env['MYSQL_HOST'], "localhost").replace(env['MYSQL_PORT'], host_port)
+            env["SPECIAL_DB_URL"] = db_url.replace(env["MYSQL_HOST"], "localhost").replace(
+                env["MYSQL_PORT"], host_port
+            )
 
         lines = ["# Auto-generated .env"]
         for section, keys in self._ENV_STRUCTURE.items():
@@ -158,7 +166,7 @@ class DockerManager:
                     v = env[k].replace('"', '\\"')
                     lines.append(f'{k}="{v}"')
 
-        Path(self._ENV_FILE).write_text("\n".join(lines), encoding='utf-8')
+        Path(self._ENV_FILE).write_text("\n".join(lines), encoding="utf-8")
         self.log.info(f"Generated {self._ENV_FILE}.")
 
     def _check_or_generate_env_file(self):
@@ -176,7 +184,8 @@ class DockerManager:
         elif system == "darwin":
             shared = base / "Library" / "Application Support" / "entities_api_share"
         else:
-            self.log.error("Unsupported OS"); sys.exit(1)
+            self.log.error("Unsupported OS")
+            sys.exit(1)
         shared.mkdir(parents=True, exist_ok=True)
         os.environ["SHARED_PATH"] = str(shared)
         self.log.info(f"SHARED_PATH set to {shared}")
@@ -200,12 +209,13 @@ class DockerManager:
         parser.add_argument("--verbose", action="store_true")
         return parser.parse_args()
 
+
 if __name__ == "__main__":
     try:
         args = DockerManager.parse_args()
         if args.verbose:
             log.setLevel(logging.DEBUG)
         DockerManager(args).run()
-    except Exception as e:
-        log.critical("Fatal error:", exc_info=args.verbose)
+    except Exception:
+        log.critical("Fatal error occurred during orchestration startup", exc_info=True)
         sys.exit(1)
