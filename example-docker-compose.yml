@@ -1,4 +1,3 @@
-# docker-compose.yml (Orchestration Version - Aligned with Dev)
 version: '3.8'
 
 services:
@@ -6,22 +5,15 @@ services:
     image: mysql:8.0
     container_name: my_mysql_cosmic_catalyst
     restart: always
-    # Aligned with Dev: Using explicit environment variables instead of env_file here
     environment:
-      MYSQL_ROOT_PASSWORD: v5C9UurE3wmqix2C
+      MYSQL_ROOT_PASSWORD: change_me_root
       MYSQL_DATABASE: cosmic_catalyst
-      MYSQL_USER: ollama
-      MYSQL_PASSWORD: 3e4Qv5uo2Cg31zC1
+      MYSQL_USER: api_user
+      MYSQL_PASSWORD: change_me_password
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
       - "3307:3306"
-    healthcheck:
-      # Aligned with Dev: Simple ping without explicit credentials
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - my_custom_network
 
@@ -30,8 +22,8 @@ services:
     container_name: qdrant_server
     restart: always
     ports:
-      - "6333:6333"  # API port
-      - "6334:6334"  # gRPC port
+      - "6333:6333"
+      - "6334:6334"
     volumes:
       - qdrant_storage:/qdrant/storage
     environment:
@@ -42,19 +34,16 @@ services:
       - my_custom_network
 
   api:
-    # Using pre-built image from Docker Hub
     image: thanosprime/entities-api-api:latest
     container_name: fastapi_cosmic_catalyst
     restart: always
     env_file:
       - .env
     environment:
-
-      - DATABASE_URL=mysql+pymysql://ollama:3e4Qv5uo2Cg31zC1@db:3306/cosmic_catalyst
-      - DEFAULT_SECRET_KEY=k-WBnsS54HZrM8ZVzYiQ-MLPOV53TuuhzEJOdG8kHcM
+      - DATABASE_URL=mysql+pymysql://api_user:change_me_password@db:3306/cosmic_catalyst
+      - DEFAULT_SECRET_KEY=change_me_secret_key
       - SANDBOX_SERVER_URL=http://sandbox:8000
       - QDRANT_URL=http://qdrant:6333
-
     ports:
       - "9000:9000"
     depends_on:
@@ -64,14 +53,13 @@ services:
         condition: service_started
       qdrant:
         condition: service_started
-
-    # If the image has its own ENTRYPOINT/CMD, this might override it or be unnecessary. Verify image documentation.
+    volumes:
+      - ./scripts:/app/scripts
     command: ["./wait-for-it.sh", "db:3306", "--", "uvicorn", "entities_api.app:app", "--host", "0.0.0.0", "--port", "9000"]
     networks:
       - my_custom_network
 
   sandbox:
-    # Using pre-built image from Docker Hub
     image: thanosprime/entities-api-sandbox:latest
     container_name: sandbox_api
     restart: always
@@ -89,7 +77,6 @@ services:
       db:
         condition: service_healthy
     volumes:
-      # Aligned with Dev config
       - /tmp/sandbox_logs:/app/logs
     networks:
       - my_custom_network
@@ -98,19 +85,17 @@ services:
     image: dperson/samba
     container_name: samba_server
     restart: unless-stopped
-
     environment:
       USERID: 1000
       GROUPID: 1000
       TZ: UTC
       USER: "samba_user;default"
       SHARE: "cosmic_share;/samba/share;yes;no;no;samba_user"
-      GLOBAL: "server min protocol = NT1\nserver max protocol = SMB3"
+      GLOBAL: "server min protocol = NT1\\nserver max protocol = SMB3"
     ports:
       - "139:139"
-      - "1445:445" # Matches Dev config
+      - "1445:445"
     volumes:
-      # Needs SHARED_PATH defined in the environment where docker-compose is run
       - ${SHARED_PATH}:/samba/share
     networks:
       - my_custom_network
@@ -124,3 +109,5 @@ volumes:
 networks:
   my_custom_network:
     driver: bridge
+    driver_opts:
+      unique_secret: "example-network-id"

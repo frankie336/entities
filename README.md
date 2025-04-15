@@ -59,6 +59,158 @@ cd entities
 
 ## 🔄 Lifecycle Commands
 
+Run one of these commands. For first time starts, option 1 is a safe bet.
+
+**1. First-time start (generates .env, pulls images, starts detached)**
+
+``python start_orchestration.py``
+
+**2. Stop all services**
+
+```python start_orchestration.py --mode down_only```
+
+
+Refer to [Extended commands](#extended-commands) for additional options.
+
+
+---
+
+👇
+
+## Default Admin User 
+
+
+ To enable executive functions, provision the default admin user by running:
+
+```bash
+
+docker compose exec api python /app/scripts/bootstrap_admin.py
+
+```
+Or
+
+Override the default db URL with:
+
+```bash
+
+docker compose exec api python /app/scripts/bootstrap_admin.py --db-url "your_explicit_url_here"
+
+```
+
+---
+👇
+
+## 🛠️ Creating a Regular User via Admin Script
+
+This script provisions a **new regular user** and generates their **initial API key** using an admin credential.
+
+---
+
+### 📦 Prerequisites
+
+- Docker stack is running (`python start.py --mode up`)
+- `.env` file contains a valid `ADMIN_API_KEY` (created via `bootstrap_admin.py`)
+- Script path: `/app/scripts/create_user.py` (mounted from `./scripts`)
+
+---
+
+### 🚀 Basic Usage
+
+#### 🔹 Create User with Auto-generated Name & Email
+
+- Good for testing 
+
+```bash
+docker compose exec api python /app/scripts/create_user.py
+```
+
+- Name will be: `Regular User <timestamp>`
+- Email will be: `test_user_<timestamp>@example.com`
+
+---
+
+#### 🔹 Create User with a Specific Name (auto-generates email)
+```bash
+docker compose exec api python /app/scripts/create_user.py --name "Bob Smith"
+```
+
+---
+
+#### 🔹 Create User with Specific Name and Email
+```bash
+docker compose exec api python /app/scripts/create_user.py \
+  --email bob.smith@company.com \
+  --name "Bob Smith"
+```
+
+---
+
+#### 🔹 Create User and Assign Custom Key Name
+```bash
+docker compose exec api python /app/scripts/create_user.py \
+  --email carol@dev.co \
+  --name "Carol Developer" \
+  --key-name "Carol Dev Key"
+```
+
+---
+
+### ⚙️ Command Breakdown
+
+- `docker compose exec`: Run a command inside a running container
+- `api`: Target service (FastAPI container)
+- `python`: Interpreter inside container
+- `/app/scripts/create_user.py`: The script inside the container
+- `--email`, `--name`, `--key-name`: Optional flags passed to the script
+
+---
+
+### 🖨️ Example Output
+
+```text
+Using Admin API Key (loaded from environment variable 'ADMIN_API_KEY') starting with: ad_Y...YYYY
+Initializing API client for base URL: http://api:9000
+API client initialized.
+
+Attempting to create user 'Regular User 1713200000' (test_user_1713200000@example.com)...
+
+New REGULAR user created successfully:
+  User ID:    usr_abc123def456ghi789jkl0
+  User Email: test_user_1713200000@example.com
+  Is Admin:   False
+
+Attempting to generate initial API key ('Default Initial Key') for user usr_abc123def456ghi789jkl0 (test_user_1713200000@example.com)...
+Calling SDK method 'create_key_for_user' on admin client for user ID usr_abc123def456ghi789jkl0
+
+==================================================
+  Initial API Key Generated for Regular User (by Admin)!
+  User ID:    usr_abc123def456ghi789jkl0
+  User Email: test_user_1713200000@example.com
+  Key Prefix: ea_XyZ7a
+  Key Name:   Default Initial Key
+--------------------------------------------------
+  PLAIN TEXT API KEY: ea_XyZ7aBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFgHiJkLm
+--------------------------------------------------
+  >>> Provide this key to the regular user for their API access. <<<
+==================================================
+
+Script finished.
+```
+
+---
+
+### ⚠️ Action Required
+
+Copy the **plain text API key** from the output (e.g., `ea_XyZ7aBcDe...`) and deliver it securely to the user.  
+They will need it to interact with the API. It does **not** need to be added to the system `.env`.
+
+---
+👇
+
+
+---
+
+## Extended commands
 
 **1. First-time start (generates .env, pulls images, starts detached)**
 
@@ -107,7 +259,14 @@ cd entities
 ```python start_orchestration.py --nuke```
 
 
----
+
+
+
+
+
+
+
+
 
 ## 📦 Docker Images
 
@@ -128,22 +287,15 @@ Images are published to Docker Hub:
 
 ---
 
-## 🛡️ Philosophy
 
-> **Entities** is designed for serious developers building intelligent assistants.
-> This repo gives you command-line control, version-aware builds, secure sandboxing, and seamless orchestration—all without relying on cloud lock-in.
 
----
 
-## 🧠 Pro Tips
 
-- Use `--debug-cache` if Docker layer caching seems broken.
-- Set `DEFAULT_SECRET_KEY` and `SIGNED_URL_SECRET` in `.env.dev` for secure API key generation.
-- Ollama not required—but it's slick if you want local inferencing.
 
----
+
+
+
 
 ## 📜 License
-
 Distributed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).  
 Commercial licensing available on request.
