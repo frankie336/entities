@@ -433,7 +433,7 @@ def run_bootstrap(args):
             print_key_to_console(
                 admin_user,
                 key_prefix,
-                plain_key,
+                plain_text_key,
                 args.creds_file,
                 args.dotenv_path,
             )

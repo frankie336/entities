@@ -1,7 +1,6 @@
 admin_credentials.txt
-
 docker-compose.yml
-!example.docker-compose.yml
+!docker-compose.example.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

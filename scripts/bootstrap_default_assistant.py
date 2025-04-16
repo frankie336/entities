@@ -1,12 +1,13 @@
-# entities_api/services/assistant_setup_service.py
+# scripts/bootstrap_default_assistant.py
 import argparse
-import getpass  # Import getpass to hide API key input
+import getpass
 import os
 import sys
 
-# --- Path Setup (Example - uncomment/adjust if needed) ---
-# Ensure project root is in path to find projectdavid, etc.
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")) # Adjust levels as needed
+# --- Path Setup ---
+# Assuming standard package installation within the container, explicit path manipulation is likely unnecessary.
+# If you encounter import errors related to projectdavid/entities_api, verify installation in the Dockerfile.
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 # if project_root not in sys.path:
 #    sys.path.insert(0, project_root)
 # --- End Path Setup ---
@@ -15,343 +16,215 @@ try:
     from projectdavid import Entity
     from projectdavid_common import ValidationInterface
 
+    # Assuming constants and assemble_instructions are correctly located relative to this file
+    # when running inside the container (e.g., part of the same installed package)
     from entities_api.constants.assistant import BASE_TOOLS, DEFAULT_MODEL
     from entities_api.services.logging_service import LoggingUtility
     from entities_api.system_message.assembly import assemble_instructions
 except ImportError as e:
     print(f"Error importing required modules: {e}")
-    print(
-        "Please ensure 'projectdavid', 'projectdavid_common', and local 'entities_api' modules are accessible."
-    )
-    print(
-        "You might need to adjust PYTHONPATH or run the script from the correct directory."
-    )
+    print("Please ensure:")
+    print("  1. Packages 'projectdavid', 'projectdavid_common', and 'entities_api' are installed within the 'api' container image.")
+    print("  2. The script is executed from a path where Python can find these packages (e.g., '/app/entities_api/services' if '/app' is the project root inside container).")
     sys.exit(1)
 
 
 # --- Initialize necessary components ---
 validate = ValidationInterface()
-logging_utility = (
-    LoggingUtility()
-)  # Instantiate logger for use in main block too if needed
+logging_utility = LoggingUtility()
 
 
 class AssistantSetupService:
-    # Modified __init__ to accept an initialized client
     def __init__(self, client: Entity):
-        """
-        Initializes the service with a pre-configured API client.
-
-        Args:
-            client: An initialized instance of the projectdavid.Entity client.
-        """
+        """Initializes the service with a pre-configured API client."""
         if not isinstance(client, Entity):
-            raise TypeError(
-                "AssistantSetupService requires an initialized projectdavid.Entity client."
-            )
+            raise TypeError("AssistantSetupService requires an initialized projectdavid.Entity client.")
         self.client = client
-        # Use the globally initialized logger or create a new one per instance
         self.logging_utility = logging_utility
 
     def create_and_associate_tools(self, function_definitions, assistant_id):
-        """
-        Creates tools if they do not already exist and associates them with the assistant.
-        Uses the client provided during initialization.
-        """
-        self.logging_utility.info(
-            f"Checking/Creating tools for assistant: {assistant_id}"
-        )
+        """Creates tools if needed and associates them with the assistant."""
+        self.logging_utility.info(f"Checking/Creating tools for assistant: {assistant_id}")
         created_tool_ids = []
         associated_tool_ids = []
 
         for func_def in function_definitions:
             tool_name = func_def.get("function", {}).get("name")
             if not tool_name:
-                self.logging_utility.warning(
-                    "Skipping tool definition with missing name."
-                )
+                self.logging_utility.warning("Skipping tool definition with missing name.")
                 continue
 
             tool_id_to_associate = None
-            try:
-                # Attempt to retrieve an existing tool by name (assuming this method exists and is appropriate)
-                # Note: Tools might not be unique globally by name, might be better to scope by assistant or type
-                existing_tool = self.client.tools.get_tool_by_name(
-                    tool_name
-                )  # Check if this method is reliable
-                if existing_tool:
-                    self.logging_utility.info(
-                        f"Tool '{tool_name}' already exists (ID: {existing_tool.id}). Will ensure association."
-                    )
-                    tool_id_to_associate = existing_tool.id
-                # else: Tool doesn't exist, proceed to create
+            # --- Find existing tool (Optional - depends on SDK/API behavior) ---
+            # try:
+            #     # This assumes a reliable way to find tools by name. Be cautious.
+            #     existing_tool = self.client.tools.get_tool_by_name(tool_name)
+            #     if existing_tool:
+            #         self.logging_utility.info(f"Tool '{tool_name}' found (ID: {existing_tool.id}).")
+            #         tool_id_to_associate = existing_tool.id
+            # except Exception as retrieval_error: # Replace with specific NotFoundError if possible
+            #     self.logging_utility.debug(f"Tool '{tool_name}' not found, will create. Hint: {retrieval_error}")
+            # --- End Find existing tool ---
 
-            except Exception as retrieval_error:
-                # Assuming a specific "Not Found" error type exists, otherwise handle generally
-                # This assumes get_tool_by_name raises an exception if not found.
-                # Check the actual exception type from your SDK for better handling
-                # e.g., except projectdavid.exceptions.NotFoundException:
-                self.logging_utility.debug(
-                    f"Did not find existing tool '{tool_name}', will attempt creation. Error hint: {retrieval_error}"
-                )
-
-            # --- Create Tool if it doesn't exist ---
-            if not tool_id_to_associate:
+            # --- Create Tool if not found (or if find logic is omitted) ---
+            if not tool_id_to_associate: # This condition is always met if find logic is omitted
                 try:
-                    # Validate the function definition structure before API call
                     tool_function = validate.ToolFunction(function=func_def["function"])
-                    # Note: create_tool might not need assistant_id if association is separate
                     new_tool = self.client.tools.create_tool(
                         name=tool_name,
                         type="function",
                         function=tool_function.model_dump(),
-                        # assistant_id=assistant_id, # Check if create_tool needs this or if association is sufficient
                     )
                     tool_id_to_associate = new_tool.id
                     created_tool_ids.append(new_tool.id)
-                    self.logging_utility.info(
-                        f"Created tool: '{tool_name}' (ID: {new_tool.id})"
-                    )
+                    self.logging_utility.info(f"Created tool: '{tool_name}' (ID: {new_tool.id})")
                 except Exception as e:
-                    self.logging_utility.error(
-                        f"Tool creation failed for '{tool_name}': {e}", exc_info=True
-                    )
-                    continue  # Skip association for this tool
+                    # Handle potential "tool already exists" errors if name must be unique
+                    self.logging_utility.error(f"Tool creation failed for '{tool_name}': {e}", exc_info=True)
+                    # Attempt to find the tool by name again if creation failed due to existence? Risky.
+                    # For now, we just skip association if creation fails.
+                    continue
 
-            # --- Associate Tool with Assistant ---
+            # --- Associate Tool ---
             if tool_id_to_associate:
                 try:
-                    # Check if association already exists? API might handle duplicates gracefully or raise error.
                     self.client.tools.associate_tool_with_assistant(
                         tool_id=tool_id_to_associate, assistant_id=assistant_id
                     )
                     associated_tool_ids.append(tool_id_to_associate)
-                    self.logging_utility.info(
-                        f"Ensured tool '{tool_name}' (ID: {tool_id_to_associate}) is associated with assistant {assistant_id}"
-                    )
+                    self.logging_utility.info(f"Ensured tool '{tool_name}' (ID: {tool_id_to_associate}) is associated with assistant {assistant_id}")
                 except Exception as e:
-                    # Handle potential errors like "already associated" if the API doesn't ignore them
-                    self.logging_utility.error(
-                        f"Failed to associate tool ID {tool_id_to_associate} with assistant {assistant_id}: {e}",
-                        exc_info=True,
-                    )
+                    # Handle potential "already associated" errors if API doesn't ignore them
+                    self.logging_utility.error(f"Failed to associate tool ID {tool_id_to_associate} with assistant {assistant_id}: {e}", exc_info=True)
 
-        self.logging_utility.info(
-            f"Tool setup summary for Assistant {assistant_id}: "
-            f"{len(created_tool_ids)} created, {len(associated_tool_ids)} associated/verified."
-        )
+        self.logging_utility.info(f"Tool setup summary for Assistant {assistant_id}: {len(created_tool_ids)} created, {len(associated_tool_ids)} associated/verified.")
+
 
     def setup_assistant_with_tools(
         self,
-        assistant_name,
-        assistant_description,
-        model,
-        instructions,
-        function_definitions,
+        user_id: str, # Added user_id here for clarity, though not directly used in sample API calls
+        assistant_name: str,
+        assistant_description: str,
+        model: str,
+        instructions: str,
+        function_definitions: list,
     ):
-        """
-        Gets an existing assistant by a known ID ('default') or creates one,
-        then ensures the specified tools are created and associated.
-        """
-        target_assistant_id = (
-            "default"
-        )
+        """Gets or creates the 'default' assistant and associates tools."""
+        target_assistant_id = "default" # Logical ID used for get-or-create
 
         try:
-            # Attempt to retrieve the assistant by its logical ID/alias
             assistant = self.client.assistants.retrieve_assistant(target_assistant_id)
-            self.logging_utility.info(
-                f"Found existing assistant '{assistant.name}' with logical ID '{target_assistant_id}' (Actual ID: {assistant.id})"
-            )
-            # Optionally update existing assistant details if needed (e.g., instructions, model)
-            # self.client.assistants.update_assistant(assistant.id, instructions=instructions, model=model, ...)
+            self.logging_utility.info(f"Found existing assistant '{assistant.name}' with logical ID '{target_assistant_id}' (Actual ID: {assistant.id})")
+            # Potential Update Logic (Uncomment and adapt if needed)
+            # update_payload = {
+            #     "name": assistant_name, "description": assistant_description,
+            #     "model": model, "instructions": instructions
+            # }
+            # updated_assistant = self.client.assistants.update_assistant(assistant.id, **update_payload)
+            # self.logging_utility.info(f"Updated existing assistant {assistant.id}.")
+            # assistant = updated_assistant # Use the updated object
 
-        except Exception:  # Be more specific if possible (e.g., NotFoundError)
-            # If retrieval fails (assistant not found by 'default' ID), create a new one.
-            self.logging_utility.warning(
-                f"Assistant with logical ID '{target_assistant_id}' not found. Creating a new one."
-            )
+        except Exception as e: # Replace with specific NotFoundError if possible
+            self.logging_utility.warning(f"Assistant with logical ID '{target_assistant_id}' not found (Hint: {e}). Creating new one.")
             try:
                 assistant = self.client.assistants.create_assistant(
                     name=assistant_name,
                     description=assistant_description,
                     model=model,
                     instructions=instructions,
-                    assistant_id=target_assistant_id,  # Attempt to assign the logical ID if API supports it
-                    # user_id=user_id # Add if create_assistant requires/supports user scoping
+                    assistant_id=target_assistant_id, # Attempt to assign logical ID (API support dependent)
+                    # user_id=user_id # Check if API requires user_id for creation
                 )
-                self.logging_utility.info(
-                    f"Created new assistant: '{assistant.name}' (Logical ID: '{target_assistant_id}', Actual ID: {assistant.id})"
-                )
-            except Exception as e:
-                self.logging_utility.error(
-                    f"Failed to create assistant '{assistant_name}': {e}", exc_info=True
-                )
-                raise  # Re-raise critical creation failure
+                self.logging_utility.info(f"Created new assistant: '{assistant.name}' (Logical ID: '{target_assistant_id}', Actual ID: {assistant.id})")
+            except Exception as create_e:
+                self.logging_utility.error(f"Failed to create assistant '{assistant_name}': {create_e}", exc_info=True)
+                raise # Critical failure
 
-        # Ensure assistant object is valid before proceeding
         if not assistant or not hasattr(assistant, "id"):
             self.logging_utility.error("Failed to obtain a valid assistant object.")
             raise ValueError("Could not retrieve or create the target assistant.")
 
-        # Now, create and associate tools for the obtained assistant ID
+        # Associate tools
         self.create_and_associate_tools(function_definitions, assistant.id)
         return assistant
 
     def orchestrate_default_assistant(self, user_id: str):
-        """
-        Main orchestration flow for setting up the 'default' assistant.
-        Now accepts the target user_id.
-
-        Args:
-            user_id: The ID of the user this operation is performed for/on behalf of.
-                     (Note: The default assistant itself might be global or user-specific
-                      depending on API design. This user_id might be for authorization
-                      or context rather than ownership of the assistant).
-        """
-        self.logging_utility.info(
-            f"Starting default assistant orchestration for user context: {user_id}"
-        )
+        """Main orchestration flow for the 'default' assistant for a given user context."""
+        self.logging_utility.info(f"Starting default assistant orchestration for user context: {user_id}")
         try:
-            # The setup_assistant_with_tools handles get-or-create of the *assistant*
-            # It no longer handles user creation. We assume the provided user_id is valid
-            # for the context of this operation (e.g., the API key belongs to this user
-            # or an admin performing actions).
-
-            # Assemble instructions dynamically if needed
             instructions = assemble_instructions()
-
             assistant = self.setup_assistant_with_tools(
-                user_id=user_id,  # Pass user_id for context if needed by setup_assistant_with_tools
-                assistant_name="Q",  # Default name for the assistant
-                assistant_description="Default general-purpose assistant",  # Default description
+                user_id=user_id, # Pass context
+                assistant_name="Q",
+                assistant_description="Default general-purpose assistant",
                 model=DEFAULT_MODEL,
                 instructions=instructions,
-                function_definitions=BASE_TOOLS,  # Use the defined base tools
+                function_definitions=BASE_TOOLS,
             )
-
-            self.logging_utility.info(
-                f"Orchestration completed. Assistant ready (ID: {assistant.id})."
-            )
+            self.logging_utility.info(f"Orchestration completed for user {user_id}. Assistant ready (ID: {assistant.id}).")
             return assistant
-
         except Exception as e:
-            self.logging_utility.critical(
-                f"Critical failure in orchestration for user {user_id}: {e}",
-                exc_info=True,
-            )
-            # Depending on desired behavior, either re-raise or return None/False
-            raise  # Re-raise to indicate failure to the caller
+            self.logging_utility.critical(f"Critical failure in orchestration for user {user_id}: {e}", exc_info=True)
+            raise
 
 
-# --- Main Execution Block ---
+# --- Main Execution Block (Modified for Container Execution) ---
 if __name__ == "__main__":
+    # --- Define default base URL for inside container ---
+    # Processes inside the 'api' container can typically reach the API on localhost
+    DEFAULT_INTERNAL_BASE_URL = "http://localhost:9000"
+
     parser = argparse.ArgumentParser(
-        description="Set up or verify the 'default' assistant and its tools. "
-        "Accepts API key and User ID via arguments or interactive prompts.",
-        formatter_class=argparse.RawTextHelpFormatter,  # Allow multiline help
+        description="Set up or verify the 'default' assistant and its tools (run inside API container).",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "--api-key",
-        help="The API key for authenticating. If omitted, you will be prompted.",
+        help="REQUIRED: The API key for authenticating (e.g., the user's key or an admin key).",
     )
     parser.add_argument(
         "--user-id",
-        help="The User ID context for this operation. If omitted, you will be prompted.",
+        help="REQUIRED: The User ID context for this operation (e.g., whose assistant setup this is for).",
     )
     parser.add_argument(
         "--base-url",
-        default=None,  # Or set a default like "http://localhost:9000"
-        help="Optional base URL for the API endpoint.",
+        default=os.getenv("ASSISTANTS_BASE_URL", DEFAULT_INTERNAL_BASE_URL), # Prioritize env, then internal default
+        help=f"Optional base URL for the API endpoint. Defaults to ASSISTANTS_BASE_URL env var or {DEFAULT_INTERNAL_BASE_URL}.",
     )
 
     args = parser.parse_args()
 
-    # --- Determine Input Values (Arguments > Prompt) ---
+    # --- Get Required Values ---
     api_key = args.api_key
     user_id = args.user_id
-    base_url = args.base_url  # Remains optional
+    base_url = args.base_url
 
-    # --- Prompt for missing required values ---
+    # --- Check for missing required arguments (more robust than prompting in exec) ---
     if not api_key:
-        print("API Key not provided via argument.")
-        # --- MODIFICATION: Use input() instead of getpass() ---
-        print("WARNING: API Key will be visible during input.")
-        try:
-            api_key = input(
-                "Please enter your API key: "
-            )  # Changed from getpass.getpass
-            if not api_key:
-                print("API Key cannot be empty. Exiting.", file=sys.stderr)
-                sys.exit(1)
-        except EOFError:
-            # This error occurs if input is redirected and empty, or in some non-interactive environments
-            print("\nError: Could not read API Key from input stream.", file=sys.stderr)
-            print(
-                "Hint: If running non-interactively, please provide the --api-key argument.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        except Exception as e:  # Catch potential input issues
-            print(f"\nError reading API key: {e}", file=sys.stderr)
-            sys.exit(1)
-        # --- END MODIFICATION ---
-
+        parser.error("Missing required argument: --api-key. Please provide the API key.")
     if not user_id:
-        print("User ID not provided via argument.")
-        try:
-            user_id = input("Please enter your User ID: ")
-            if not user_id:
-                print("User ID cannot be empty. Exiting.", file=sys.stderr)
-                sys.exit(1)
-        except EOFError:
-            print("\nError: Could not read User ID from input stream.", file=sys.stderr)
-            print(
-                "Hint: If running non-interactively, please provide the --user-id argument.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        except Exception as e:
-            print(f"\nError reading User ID: {e}", file=sys.stderr)
-            sys.exit(1)
+        parser.error("Missing required argument: --user-id. Please provide the User ID.")
 
     # --- Print Configuration Being Used ---
-    print("\n--- Assistant Setup Configuration ---")
+    print("\n--- Assistant Setup Configuration (inside container) ---")
     print(f"User ID Context: {user_id}")
-    # Still mask the key in the confirmation printout for safety
-    print(f"API Key: {'*' * (len(api_key) - 4)}{api_key[-4:]}")
-    if base_url:
-        print(f"Base URL: {base_url}")
-    else:
-        print("Base URL: (Using client default)")
-    print("-" * 35)
+    print(f"API Key: {'*' * (len(api_key) - 4)}{api_key[-4:]}") # Mask key
+    print(f"Base URL: {base_url}")
+    print("-" * 50)
 
     # --- Initialize Client ---
     try:
-        client_params = {"api_key": api_key}
-        if base_url:
-            client_params["base_url"] = base_url
+        print(f"Initializing API client with Base URL: {base_url}...")
+        api_client = Entity(api_key=api_key, base_url=base_url)
 
-        api_client = Entity(**client_params)
-        # Optional: Add a quick check here like retrieving the user to validate credentials early
+        # Optional: Validate credentials early
         try:
             print("Validating credentials by retrieving user...")
             retrieved_user = api_client.users.retrieve_user(user_id)
-            print(
-                f"Credentials seem valid (User '{getattr(retrieved_user, 'email', user_id)}' retrieved successfully)."
-            )
+            print(f"Credentials valid (User '{getattr(retrieved_user, 'email', user_id)}' retrieved).")
         except Exception as check_err:
-            print(
-                f"\nWarning: Could not validate credentials by retrieving user {user_id}.",
-                file=sys.stderr,
-            )
-            print(f"Error detail: {check_err}", file=sys.stderr)
-            print(
-                "Continuing execution, but API calls might fail if credentials are incorrect.",
-                file=sys.stderr,
-            )
-            # Decide whether to exit or continue
-            # sys.exit(1) # Uncomment to make validation mandatory
+            print(f"\nWarning: Could not validate credentials/user_id ({user_id}). Error: {check_err}", file=sys.stderr)
+            print("Continuing execution, but API calls might fail.", file=sys.stderr)
 
         print("API Client initialized.")
 
@@ -362,14 +235,9 @@ if __name__ == "__main__":
 
     # --- Instantiate and Run Service ---
     try:
-        # Pass the initialized client to the service
         service = AssistantSetupService(client=api_client)
-
-        # Run the orchestration, passing the determined user ID
         print("\nStarting assistant orchestration...")
-        logging_utility.info(
-            f"Initiating orchestration via script execution (User: {user_id})"
-        )
+        logging_utility.info(f"Initiating orchestration via script execution (User: {user_id}, BaseURL: {base_url})")
         assistant = service.orchestrate_default_assistant(user_id=user_id)
 
         if assistant:
@@ -378,14 +246,13 @@ if __name__ == "__main__":
             print(f"Assistant ID:   {getattr(assistant, 'id', 'N/A')}")
             print("Tools should now be created/associated.")
         else:
-            # This path might not be reached if orchestrate_default_assistant raises on failure
+            # This path unlikely if orchestrate_default_assistant raises on failure
             print("\n--- Orchestration Finished (No Assistant Object Returned) ---")
-            print("Check logs for details. There might have been an issue.")
+            print("Check logs for details.")
 
     except Exception as e:
         print(f"\n--- Orchestration Failed ---", file=sys.stderr)
         print(f"Error: {e}", file=sys.stderr)
-        # Logging is handled within the service methods
         sys.exit(1)
 
     print("\nScript finished.")
