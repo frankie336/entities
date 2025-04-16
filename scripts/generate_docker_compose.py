@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import secrets
 import uuid
 from pathlib import Path

@@ -4,18 +4,11 @@ import os
 import sys
 import time
 
-from dotenv import load_dotenv
-
-# Assuming projectdavid.Entity correctly initializes ApiKeysClient under .keys
-# Make sure this import works based on your project structure and container image.
 try:
-    # Let Python find the installed package within the container's environment
+
     from projectdavid import Entity
 except ImportError:
-    # Add project root to path if needed - less likely needed inside container if installed properly
-    # project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    # if project_root not in sys.path:
-    #     sys.path.insert(0, project_root)
+
     try:
         from projectdavid import Entity
     except ImportError as e:

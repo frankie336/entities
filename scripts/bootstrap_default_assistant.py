@@ -1,20 +1,9 @@
 # scripts/bootstrap_default_assistant.py
 import argparse
-import getpass
 import os
 import sys
 
-# --- Path Setup ---
-# Assuming standard package installation within the container, explicit path manipulation is likely unnecessary.
-# If you encounter import errors related to projectdavid/entities_api, verify installation in the Dockerfile.
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-# if project_root not in sys.path:
-#    sys.path.insert(0, project_root)
-# --- End Path Setup ---
-
 try:
-    # Assuming constants and assemble_instructions are correctly located relative to this file
-    # when running inside the container (e.g., part of the same installed package)
     from entities_api.constants.assistant import BASE_TOOLS, DEFAULT_MODEL
     from entities_api.services.logging_service import LoggingUtility
     from entities_api.system_message.assembly import assemble_instructions
@@ -264,7 +253,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"\nError: Failed to initialize API client: {e}", file=sys.stderr)
-        logging_utility.error(f"Failed to initialize API client", exc_info=True)
+        logging_utility.error("Failed to initialize API client", exc_info=True)
         sys.exit(1)
 
     # --- Instantiate and Run Service ---
@@ -287,7 +276,7 @@ if __name__ == "__main__":
             print("Check logs for details.")
 
     except Exception as e:
-        print(f"\n--- Orchestration Failed ---", file=sys.stderr)
+        print("\n--- Orchestration Failed ---", file=sys.stderr)
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 

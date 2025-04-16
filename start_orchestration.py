@@ -1,16 +1,14 @@
 #!start_orchestration.py
 import argparse
-import json
 import logging
 import os
 import platform
-import re  # Added for .env parsing
+import re
 import secrets
 import shutil
 import subprocess
 import sys
 import time
-from os.path import getsize, islink
 from pathlib import Path
 from urllib.parse import quote_plus  # Needed for password escaping in URL
 
@@ -441,13 +439,11 @@ class DockerOrchestrationManager:
             needs_generation = current_value is None or current_value == "default"
 
             if needs_generation:
-                generated_value = None
-                prefix = ""
-                # Adjust lengths and formats as needed for specific keys
+
                 if key == "ADMIN_API_KEY":
                     prefix = "ad_"
                     generated_value = f"{prefix}{secrets.token_urlsafe(32)}"
-                    generation_log[key] = f"Generated new secret (admin format)"
+                    generation_log[key] = "Generated new secret (admin format)"
                 elif key == "API_KEY":
                     prefix = "ea_"
                     generated_value = f"{prefix}{secrets.token_urlsafe(16)}"

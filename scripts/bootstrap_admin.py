@@ -3,7 +3,6 @@ import argparse
 import os
 import sys
 from datetime import datetime
-from urllib.parse import quote_plus
 
 from dotenv import find_dotenv, load_dotenv, set_key
 from sqlalchemy import create_engine
