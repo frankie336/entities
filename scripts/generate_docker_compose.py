@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import os
-import uuid
 import secrets
+import uuid
 from pathlib import Path
+
 
 def generate_docker_compose():
     # Resolve the project root (assuming script is under /scripts)
@@ -151,6 +152,7 @@ networks:
     print(f"  - MYSQL_PASSWORD:       {unique_mysql_password}")
     print(f"  - DEFAULT_SECRET_KEY:   {unique_default_secret}")
     print(f"  - Network Unique ID:    {unique_network_secret}\n")
+
 
 if __name__ == "__main__":
     generate_docker_compose()

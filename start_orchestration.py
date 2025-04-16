@@ -38,7 +38,8 @@ log = logging.getLogger(__name__)
 # --- Constants ---
 DEFAULT_DB_CONTAINER_PORT = "3306"
 DEFAULT_DB_SERVICE_NAME = "db"
-API_SERVICE_NAME = "api" # Define the target service for exec commands
+API_SERVICE_NAME = "api"  # Define the target service for exec commands
+
 
 class DockerOrchestrationManager:
     """
@@ -72,9 +73,9 @@ class DockerOrchestrationManager:
         "SECRET_KEY",
         "DEFAULT_SECRET_KEY",
         "ADMIN_API_KEY",
-        "SMBCLIENT_PASSWORD", # Ensure these get generated if default
-        "SAMBA_PASSWORD",     # Ensure these get generated if default
-        "MYSQL_ROOT_PASSWORD", # Ensure DB passwords get generated if default/missing
+        "SMBCLIENT_PASSWORD",  # Ensure these get generated if default
+        "SAMBA_PASSWORD",  # Ensure these get generated if default
+        "MYSQL_ROOT_PASSWORD",  # Ensure DB passwords get generated if default/missing
         "MYSQL_PASSWORD",
     ]
 
@@ -97,8 +98,8 @@ class DockerOrchestrationManager:
         "MYSQL_PORT": DEFAULT_DB_CONTAINER_PORT,
         "MYSQL_DATABASE": "cosmic_catalyst",
         "MYSQL_USER": "ollama",
-        "MYSQL_PASSWORD": "default", # Mark for generation
-        "MYSQL_ROOT_PASSWORD": "default", # Mark for generation
+        "MYSQL_PASSWORD": "default",  # Mark for generation
+        "MYSQL_ROOT_PASSWORD": "default",  # Mark for generation
         "BASE_URL_HEALTH": "http://api:9000/v1/health",
         "SHELL_SERVER_URL": "ws://sandbox:8000/ws/computer",
         "CODE_EXECUTION_URL": "ws://sandbox:8000/ws/execute",
@@ -106,10 +107,10 @@ class DockerOrchestrationManager:
         "SMBCLIENT_SERVER": "samba_server",
         "SMBCLIENT_SHARE": "cosmic_share",
         "SMBCLIENT_USERNAME": "samba_user",
-        "SMBCLIENT_PASSWORD": "default", # Mark for generation
+        "SMBCLIENT_PASSWORD": "default",  # Mark for generation
         "SMBCLIENT_PORT": "445",
         "SAMBA_USER": "samba_user",
-        "SAMBA_PASSWORD": "default", # Mark for generation
+        "SAMBA_PASSWORD": "default",  # Mark for generation
         "SAMBA_SHARE_NAME": "cosmic_share",
         "SAMBA_USERID": "1000",
         "SAMBA_GROUPID": "1000",
@@ -120,13 +121,57 @@ class DockerOrchestrationManager:
 
     # Order and grouping for .env file formatting.
     _ENV_STRUCTURE = {
-        "Base URLs": ["ASSISTANTS_BASE_URL", "SANDBOX_SERVER_URL", "DOWNLOAD_BASE_URL", "HYPERBOLIC_BASE_URL", "QDRANT_URL"],
-        "Database Configuration": ["DATABASE_URL", "SPECIAL_DB_URL", "MYSQL_ROOT_PASSWORD", "MYSQL_DATABASE", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_HOST", "MYSQL_PORT"],
-        "API Keys & Secrets": ["API_KEY", "ADMIN_API_KEY", "SIGNED_URL_SECRET", "SECRET_KEY", "DEFAULT_SECRET_KEY"],
-        "Platform Settings": ["BASE_URL_HEALTH", "SHELL_SERVER_URL", "CODE_EXECUTION_URL", "DISABLE_FIREJAIL"],
-        "SMB Client Configuration": ["SMBCLIENT_SERVER", "SMBCLIENT_SHARE", "SMBCLIENT_USERNAME", "SMBCLIENT_PASSWORD", "SMBCLIENT_PORT"],
-        "Samba Server Configuration": ["SAMBA_USER", "SAMBA_PASSWORD", "SAMBA_SHARE_NAME", "SAMBA_USERID", "SAMBA_GROUPID", "TZ"],
-        "Tool Identifiers": ["TOOL_CODE_INTERPRETER", "TOOL_WEB_SEARCH", "TOOL_COMPUTER", "TOOL_VECTOR_STORE_SEARCH"],
+        "Base URLs": [
+            "ASSISTANTS_BASE_URL",
+            "SANDBOX_SERVER_URL",
+            "DOWNLOAD_BASE_URL",
+            "HYPERBOLIC_BASE_URL",
+            "QDRANT_URL",
+        ],
+        "Database Configuration": [
+            "DATABASE_URL",
+            "SPECIAL_DB_URL",
+            "MYSQL_ROOT_PASSWORD",
+            "MYSQL_DATABASE",
+            "MYSQL_USER",
+            "MYSQL_PASSWORD",
+            "MYSQL_HOST",
+            "MYSQL_PORT",
+        ],
+        "API Keys & Secrets": [
+            "API_KEY",
+            "ADMIN_API_KEY",
+            "SIGNED_URL_SECRET",
+            "SECRET_KEY",
+            "DEFAULT_SECRET_KEY",
+        ],
+        "Platform Settings": [
+            "BASE_URL_HEALTH",
+            "SHELL_SERVER_URL",
+            "CODE_EXECUTION_URL",
+            "DISABLE_FIREJAIL",
+        ],
+        "SMB Client Configuration": [
+            "SMBCLIENT_SERVER",
+            "SMBCLIENT_SHARE",
+            "SMBCLIENT_USERNAME",
+            "SMBCLIENT_PASSWORD",
+            "SMBCLIENT_PORT",
+        ],
+        "Samba Server Configuration": [
+            "SAMBA_USER",
+            "SAMBA_PASSWORD",
+            "SAMBA_SHARE_NAME",
+            "SAMBA_USERID",
+            "SAMBA_GROUPID",
+            "TZ",
+        ],
+        "Tool Identifiers": [
+            "TOOL_CODE_INTERPRETER",
+            "TOOL_WEB_SEARCH",
+            "TOOL_COMPUTER",
+            "TOOL_VECTOR_STORE_SEARCH",
+        ],
         "Volume Configuration": ["SHARED_PATH"],
         "Other": ["LOG_LEVEL", "PYTHONUNBUFFERED"],
     }
@@ -138,8 +183,8 @@ class DockerOrchestrationManager:
         "DATABASE_URL",
         "SPECIAL_DB_URL",
         "SHARED_PATH",
-        "MYSQL_ROOT_PASSWORD", # Added for visibility during setup
-        "SAMBA_PASSWORD",      # Added for visibility
+        "MYSQL_ROOT_PASSWORD",  # Added for visibility during setup
+        "SAMBA_PASSWORD",  # Added for visibility
         "SMBCLIENT_PASSWORD",  # Added for visibility
     ]
 
@@ -154,7 +199,7 @@ class DockerOrchestrationManager:
         self.log.debug("DockerOrchestrationManager initialized with args: %s", args)
         self.compose_config = self._load_compose_config()
         self._configure_shared_path()
-        self._check_for_required_env_file() # Generate .env if missing
+        self._check_for_required_env_file()  # Generate .env if missing
 
         # --- Print Key Summary ---
         # This happens after .env is confirmed/generated
@@ -162,35 +207,58 @@ class DockerOrchestrationManager:
         # --- End Print Key Summary ---
 
     # --- Core Docker/System Command Execution ---
-    def _run_command(self, cmd_list, check=True, capture_output=False, text=True, suppress_logs=False, **kwargs):
+    def _run_command(
+        self, cmd_list, check=True, capture_output=False, text=True, suppress_logs=False, **kwargs
+    ):
         """Runs a shell command using subprocess."""
         if not suppress_logs:
             # Mask sensitive arguments before logging command
             masked_cmd_list = []
             mask_next = False
-            sensitive_flags = ["--exec-api-key", "--api-key", "--db-url", "MYSQL_ROOT_PASSWORD", "MYSQL_PASSWORD", "SAMBA_PASSWORD", "SMBCLIENT_PASSWORD", "ADMIN_API_KEY", "API_KEY", "SECRET_KEY", "DEFAULT_SECRET_KEY"]
+            sensitive_flags = [
+                "--exec-api-key",
+                "--api-key",
+                "--db-url",
+                "MYSQL_ROOT_PASSWORD",
+                "MYSQL_PASSWORD",
+                "SAMBA_PASSWORD",
+                "SMBCLIENT_PASSWORD",
+                "ADMIN_API_KEY",
+                "API_KEY",
+                "SECRET_KEY",
+                "DEFAULT_SECRET_KEY",
+            ]
             for item in cmd_list:
                 if mask_next:
                     masked_cmd_list.append("*****")
                     mask_next = False
                 elif any(flag in item for flag in sensitive_flags):
-                     # Handle "flag=value" or "flag value"
-                     if "=" in item:
-                          parts = item.split("=", 1)
-                          masked_cmd_list.append(f"{parts[0]}=*****")
-                     else:
-                          masked_cmd_list.append(item)
-                          mask_next = True # Mask the next item which should be the value
+                    # Handle "flag=value" or "flag value"
+                    if "=" in item:
+                        parts = item.split("=", 1)
+                        masked_cmd_list.append(f"{parts[0]}=*****")
+                    else:
+                        masked_cmd_list.append(item)
+                        mask_next = True  # Mask the next item which should be the value
                 else:
                     masked_cmd_list.append(item)
 
             self.log.info("Running command: %s", " ".join(masked_cmd_list))
 
         try:
-            result = subprocess.run(cmd_list, check=check, capture_output=capture_output, text=text, shell=self.is_windows, **kwargs)
+            result = subprocess.run(
+                cmd_list,
+                check=check,
+                capture_output=capture_output,
+                text=text,
+                shell=self.is_windows,
+                **kwargs,
+            )
             if not suppress_logs:
-                self.log.debug("Command finished: %s", " ".join(cmd_list)) # Log original command on debug
-                if capture_output: # Only log if we actually captured something
+                self.log.debug(
+                    "Command finished: %s", " ".join(cmd_list)
+                )  # Log original command on debug
+                if capture_output:  # Only log if we actually captured something
                     # Consider masking output as well if it might contain secrets
                     stdout_log = result.stdout.strip() if result.stdout else ""
                     stderr_log = result.stderr.strip() if result.stderr else ""
@@ -205,21 +273,25 @@ class DockerOrchestrationManager:
                         self.log.debug("Command stderr:\n%s", stderr_log)
             return result
         except subprocess.CalledProcessError as e:
-            self.log.error("Command failed: %s", " ".join(cmd_list)) # Log original command on error
+            self.log.error(
+                "Command failed: %s", " ".join(cmd_list)
+            )  # Log original command on error
             self.log.error("Return Code: %s", e.returncode)
-            if capture_output: # Log captured output on error too
+            if capture_output:  # Log captured output on error too
                 if e.stdout:
                     self.log.error("STDOUT:\n%s", e.stdout.strip())
                 if e.stderr:
                     self.log.error("STDERR:\n%s", e.stderr.strip())
-            elif e.stderr: # If we didn't capture, but have stderr from exception
-                 self.log.error("STDERR:\n%s", e.stderr.strip())
+            elif e.stderr:  # If we didn't capture, but have stderr from exception
+                self.log.error("STDERR:\n%s", e.stderr.strip())
 
-            if check: # Re-raise only if check=True
+            if check:  # Re-raise only if check=True
                 raise
-            return e # Otherwise return the error object
+            return e  # Otherwise return the error object
         except Exception as e:
-            self.log.error("Error running command %s: %s", " ".join(cmd_list), e, exc_info=self.args.verbose)
+            self.log.error(
+                "Error running command %s: %s", " ".join(cmd_list), e, exc_info=self.args.verbose
+            )
             raise
 
     # --- .dockerignore Generation ---
@@ -228,7 +300,9 @@ class DockerOrchestrationManager:
         dockerignore = Path(".dockerignore")
         if not dockerignore.exists():
             self.log.info(".dockerignore not found. Generating default.")
-            dockerignore.write_text("__pycache__/\n.venv/\nnode_modules/\n*.log\n*.pyc\n.git/\n.env*\n.env\n*.sqlite\ndist/\nbuild/\ncoverage/\ntmp/\n*.egg-info/\n")
+            dockerignore.write_text(
+                "__pycache__/\n.venv/\nnode_modules/\n*.log\n*.pyc\n.git/\n.env*\n.env\n*.sqlite\ndist/\nbuild/\ncoverage/\ntmp/\n*.egg-info/\n"
+            )
             self.log.info("Generated default .dockerignore.")
 
     # --- Environment File Generation ---
@@ -270,16 +344,24 @@ class DockerOrchestrationManager:
                         return match.group(1) if match.group(1) is not None else ""
                 return None
             else:
-                self.log.warning("Unexpected environment format in '%s': %s", service_name, type(environment))
+                self.log.warning(
+                    "Unexpected environment format in '%s': %s", service_name, type(environment)
+                )
                 return None
         except Exception as e:
-            self.log.error("Error accessing compose env for %s/%s: %s", service_name, env_var_name, e)
+            self.log.error(
+                "Error accessing compose env for %s/%s: %s", service_name, env_var_name, e
+            )
             return None
 
     def _get_host_port_from_compose_service(self, service_name, container_port):
         """Finds the host port mapping for a given container port."""
         if not self.compose_config:
-            self.log.warning("Compose config not loaded; cannot determine host port for %s:%s.", service_name, container_port)
+            self.log.warning(
+                "Compose config not loaded; cannot determine host port for %s:%s.",
+                service_name,
+                container_port,
+            )
             return None
         try:
             service_data = self.compose_config.get("services", {}).get(service_name)
@@ -295,10 +377,15 @@ class DockerOrchestrationManager:
                     continue  # Only container port specified.
                 elif len(parts) == 2:
                     host_port, cont_port = parts
-                elif len(parts) >= 3: # Handle potential IP binding like "127.0.0.1:8080:80"
-                    host_port, cont_port = parts[-2], parts[-1] # Take last two parts
+                elif len(parts) >= 3:  # Handle potential IP binding like "127.0.0.1:8080:80"
+                    host_port, cont_port = parts[-2], parts[-1]  # Take last two parts
                 if cont_port == container_port_str:
-                    self.log.debug("Found host port %s for %s:%s", host_port.strip(), service_name, container_port_str)
+                    self.log.debug(
+                        "Found host port %s for %s:%s",
+                        host_port.strip(),
+                        service_name,
+                        container_port_str,
+                    )
                     return host_port.strip()
             self.log.debug("No host port found for %s:%s", service_name, container_port_str)
             return None
@@ -311,30 +398,34 @@ class DockerOrchestrationManager:
         self.log.info("Generating '%s' file...", self._ENV_FILE)
         env_values = {}
         generation_log = {}
-        generated_secrets_printed = {} # Keep track of what we print
+        generated_secrets_printed = {}  # Keep track of what we print
 
         # --- Step 0: Read existing .env if it exists, to preserve non-default values ---
         # This helps avoid overwriting user customizations unless a secret needs generation
         existing_env_vars = {}
         env_file_path = Path(self._ENV_FILE)
         if env_file_path.exists():
-             self.log.debug("Reading existing %s to preserve values...", self._ENV_FILE)
-             existing_env_vars = self._read_env_file(env_file_path)
-             env_values.update(existing_env_vars) # Start with existing values
+            self.log.debug("Reading existing %s to preserve values...", self._ENV_FILE)
+            existing_env_vars = self._read_env_file(env_file_path)
+            env_values.update(existing_env_vars)  # Start with existing values
 
         # --- Step 1: Populate from compose environment sections (override existing if specified) ---
         if self.compose_config:
-             for env_key, (svc, compose_key) in self._COMPOSE_ENV_MAPPING.items():
-                 value = self._get_env_from_compose_service(svc, compose_key)
-                 if value is not None:
-                     if env_key not in env_values or env_values[env_key] != str(value):
-                          self.log.debug("Updating %s from compose config (%s/%s)", env_key, svc, compose_key)
-                          env_values[env_key] = str(value)
-                          generation_log[env_key] = f"From {self._DOCKER_COMPOSE_FILE} ({svc}/{compose_key})"
-                 #else: # Don't necessarily log 'NOT found' if it's already set
-                 #    generation_log[env_key] = f"NOT found in {self._DOCKER_COMPOSE_FILE} ({svc}/{compose_key})"
+            for env_key, (svc, compose_key) in self._COMPOSE_ENV_MAPPING.items():
+                value = self._get_env_from_compose_service(svc, compose_key)
+                if value is not None:
+                    if env_key not in env_values or env_values[env_key] != str(value):
+                        self.log.debug(
+                            "Updating %s from compose config (%s/%s)", env_key, svc, compose_key
+                        )
+                        env_values[env_key] = str(value)
+                        generation_log[env_key] = (
+                            f"From {self._DOCKER_COMPOSE_FILE} ({svc}/{compose_key})"
+                        )
+                # else: # Don't necessarily log 'NOT found' if it's already set
+                #    generation_log[env_key] = f"NOT found in {self._DOCKER_COMPOSE_FILE} ({svc}/{compose_key})"
         else:
-             self.log.warning("Compose file not loaded; cannot source env vars from it.")
+            self.log.warning("Compose file not loaded; cannot source env vars from it.")
 
         # --- Step 2: Fill missing values with defaults ---
         for key, default_val in self._DEFAULT_VALUES.items():
@@ -347,39 +438,44 @@ class DockerOrchestrationManager:
         for key in self._GENERATED_SECRETS:
             # Generate if key is missing OR if its current value is 'default'
             current_value = env_values.get(key)
-            needs_generation = (current_value is None or current_value == 'default')
+            needs_generation = current_value is None or current_value == "default"
 
             if needs_generation:
                 generated_value = None
                 prefix = ""
                 # Adjust lengths and formats as needed for specific keys
                 if key == "ADMIN_API_KEY":
-                     prefix = "ad_"
-                     generated_value = f"{prefix}{secrets.token_urlsafe(32)}"
-                     generation_log[key] = f"Generated new secret (admin format)"
+                    prefix = "ad_"
+                    generated_value = f"{prefix}{secrets.token_urlsafe(32)}"
+                    generation_log[key] = f"Generated new secret (admin format)"
                 elif key == "API_KEY":
-                     prefix = "ea_"
-                     generated_value = f"{prefix}{secrets.token_urlsafe(16)}"
-                     generation_log[key] = f"Generated new secret ({len(generated_value)} chars, user format)"
+                    prefix = "ea_"
+                    generated_value = f"{prefix}{secrets.token_urlsafe(16)}"
+                    generation_log[key] = (
+                        f"Generated new secret ({len(generated_value)} chars, user format)"
+                    )
                 elif key in ["SAMBA_PASSWORD", "SMBCLIENT_PASSWORD"]:
                     generated_value = secrets.token_urlsafe(16)
                     generation_log[key] = f"Generated new secret ({len(generated_value)} chars)"
                 elif key in ["MYSQL_ROOT_PASSWORD", "MYSQL_PASSWORD"]:
-                     generated_value = secrets.token_urlsafe(24)
-                     generation_log[key] = f"Generated new secret ({len(generated_value)} chars)"
+                    generated_value = secrets.token_urlsafe(24)
+                    generation_log[key] = f"Generated new secret ({len(generated_value)} chars)"
                 elif key in ["SIGNED_URL_SECRET", "SECRET_KEY", "DEFAULT_SECRET_KEY"]:
-                     generated_value = secrets.token_hex(32)
-                     generation_log[key] = f"Generated new secret ({len(generated_value)} hex chars)"
-                else: # Should not happen if key is in _GENERATED_SECRETS
-                     self.log.warning(f"Unknown secret key '{key}' in _GENERATED_SECRETS. Using default generation.")
-                     generated_value = secrets.token_hex(32)
-                     generation_log[key] = f"Generated new secret ({len(generated_value)} hex chars, default)"
-
+                    generated_value = secrets.token_hex(32)
+                    generation_log[key] = f"Generated new secret ({len(generated_value)} hex chars)"
+                else:  # Should not happen if key is in _GENERATED_SECRETS
+                    self.log.warning(
+                        f"Unknown secret key '{key}' in _GENERATED_SECRETS. Using default generation."
+                    )
+                    generated_value = secrets.token_hex(32)
+                    generation_log[key] = (
+                        f"Generated new secret ({len(generated_value)} hex chars, default)"
+                    )
 
                 env_values[key] = generated_value
 
                 # *** Explicitly print generated secrets ***
-                if key in self._KEYS_TO_SUMMARIZE: # Only print those we intend to summarize
+                if key in self._KEYS_TO_SUMMARIZE:  # Only print those we intend to summarize
                     # Use standard print for immediate visibility, bypassing logging levels
                     print("\n========================================================")
                     print(f"  >>> Generated {key}: {generated_value}")
@@ -387,10 +483,9 @@ class DockerOrchestrationManager:
                     print("========================================================\n")
                     generated_secrets_printed[key] = True
             else:
-                 # Secret exists and is not 'default', keep existing value
-                 if key not in generation_log: # Avoid overwriting log if it came from compose
-                     generation_log[key] = "Using existing value from .env"
-
+                # Secret exists and is not 'default', keep existing value
+                if key not in generation_log:  # Avoid overwriting log if it came from compose
+                    generation_log[key] = "Using existing value from .env"
 
         # --- Step 4: Generate Tool IDs if not set ---
         for key in self._GENERATED_TOOL_IDS:
@@ -403,12 +498,13 @@ class DockerOrchestrationManager:
         shared_path_val = os.environ.get("SHARED_PATH")
         if shared_path_val:
             if "SHARED_PATH" not in env_values or env_values["SHARED_PATH"] != shared_path_val:
-                 env_values["SHARED_PATH"] = shared_path_val
-                 generation_log["SHARED_PATH"] = "Set from environment/default"
+                env_values["SHARED_PATH"] = shared_path_val
+                generation_log["SHARED_PATH"] = "Set from environment/default"
         else:
             # This case should ideally not happen if _configure_shared_path runs first
             self.log.warning("SHARED_PATH not determined; check _configure_shared_path logic.")
-            if "SHARED_PATH" in env_values: del env_values["SHARED_PATH"] # Remove if somehow present but not valid
+            if "SHARED_PATH" in env_values:
+                del env_values["SHARED_PATH"]  # Remove if somehow present but not valid
             generation_log["SHARED_PATH"] = "Skipped: Not determined"
 
         # --- Step 6: Construct Composite Database URLs ---
@@ -419,43 +515,63 @@ class DockerOrchestrationManager:
         db_name = env_values.get("MYSQL_DATABASE")
 
         # Regenerate DB URLs only if components are valid (including generated passwords)
-        if all([db_user, db_pass not in [None, 'default'], db_host, db_port, db_name]):
+        if all([db_user, db_pass not in [None, "default"], db_host, db_port, db_name]):
             escaped_pass = quote_plus(str(db_pass))
             new_db_url = f"mysql+pymysql://{db_user}:{escaped_pass}@{db_host}:{db_port}/{db_name}"
             if env_values.get("DATABASE_URL") != new_db_url:
                 env_values["DATABASE_URL"] = new_db_url
                 generation_log["DATABASE_URL"] = "Constructed/updated from DB components"
 
-            host_db_port = self._get_host_port_from_compose_service(DEFAULT_DB_SERVICE_NAME, DEFAULT_DB_CONTAINER_PORT)
+            host_db_port = self._get_host_port_from_compose_service(
+                DEFAULT_DB_SERVICE_NAME, DEFAULT_DB_CONTAINER_PORT
+            )
             if host_db_port:
-                new_special_url = f"mysql+pymysql://{db_user}:{escaped_pass}@localhost:{host_db_port}/{db_name}"
+                new_special_url = (
+                    f"mysql+pymysql://{db_user}:{escaped_pass}@localhost:{host_db_port}/{db_name}"
+                )
                 if env_values.get("SPECIAL_DB_URL") != new_special_url:
-                     env_values["SPECIAL_DB_URL"] = new_special_url
-                     generation_log["SPECIAL_DB_URL"] = f"Constructed/updated using host port ({host_db_port})"
+                    env_values["SPECIAL_DB_URL"] = new_special_url
+                    generation_log["SPECIAL_DB_URL"] = (
+                        f"Constructed/updated using host port ({host_db_port})"
+                    )
             else:
-                if "SPECIAL_DB_URL" in env_values: # Remove if host port not found
-                     del env_values["SPECIAL_DB_URL"]
-                     generation_log["SPECIAL_DB_URL"] = "Removed: No host port mapping found"
-                self.log.warning("No host port mapping for DB service '%s'. SPECIAL_DB_URL cannot be generated.", DEFAULT_DB_SERVICE_NAME)
+                if "SPECIAL_DB_URL" in env_values:  # Remove if host port not found
+                    del env_values["SPECIAL_DB_URL"]
+                    generation_log["SPECIAL_DB_URL"] = "Removed: No host port mapping found"
+                self.log.warning(
+                    "No host port mapping for DB service '%s'. SPECIAL_DB_URL cannot be generated.",
+                    DEFAULT_DB_SERVICE_NAME,
+                )
 
         else:
             # If components are missing or password is still 'default', remove the URLs
             missing_or_default = []
-            if not db_user: missing_or_default.append("MYSQL_USER")
-            if db_pass in [None, 'default']: missing_or_default.append("MYSQL_PASSWORD (default/missing)")
-            if not db_host: missing_or_default.append("MYSQL_HOST")
-            if not db_port: missing_or_default.append("MYSQL_PORT")
-            if not db_name: missing_or_default.append("MYSQL_DATABASE")
+            if not db_user:
+                missing_or_default.append("MYSQL_USER")
+            if db_pass in [None, "default"]:
+                missing_or_default.append("MYSQL_PASSWORD (default/missing)")
+            if not db_host:
+                missing_or_default.append("MYSQL_HOST")
+            if not db_port:
+                missing_or_default.append("MYSQL_PORT")
+            if not db_name:
+                missing_or_default.append("MYSQL_DATABASE")
 
             if missing_or_default:
-                 self.log.warning("Cannot construct DB URLs due to missing/default components: %s", ", ".join(missing_or_default))
-                 if "DATABASE_URL" in env_values:
-                     del env_values["DATABASE_URL"]
-                     generation_log["DATABASE_URL"] = f"Removed: Missing {', '.join(missing_or_default)}"
-                 if "SPECIAL_DB_URL" in env_values:
-                     del env_values["SPECIAL_DB_URL"]
-                     generation_log["SPECIAL_DB_URL"] = f"Removed: Missing {', '.join(missing_or_default)}"
-
+                self.log.warning(
+                    "Cannot construct DB URLs due to missing/default components: %s",
+                    ", ".join(missing_or_default),
+                )
+                if "DATABASE_URL" in env_values:
+                    del env_values["DATABASE_URL"]
+                    generation_log["DATABASE_URL"] = (
+                        f"Removed: Missing {', '.join(missing_or_default)}"
+                    )
+                if "SPECIAL_DB_URL" in env_values:
+                    del env_values["SPECIAL_DB_URL"]
+                    generation_log["SPECIAL_DB_URL"] = (
+                        f"Removed: Missing {', '.join(missing_or_default)}"
+                    )
 
         # --- Step 7: Format and write the .env file ---
         env_lines = [f"# Auto-generated/updated .env file by {os.path.basename(__file__)}", ""]
@@ -484,15 +600,14 @@ class DockerOrchestrationManager:
                     found_in_section = True
 
             if found_in_section:
-                 env_lines.append("#############################")
-                 env_lines.append(f"# {section_name}")
-                 env_lines.append("#############################")
-                 env_lines.extend(section_content)
-                 env_lines.append("")
-            #else: # Optional: Don't print empty sections
+                env_lines.append("#############################")
+                env_lines.append(f"# {section_name}")
+                env_lines.append("#############################")
+                env_lines.extend(section_content)
+                env_lines.append("")
+            # else: # Optional: Don't print empty sections
             #    env_lines.append(f"# (No variables configured for {section_name})")
             #    env_lines.append("")
-
 
         # Append any remaining keys (not in _ENV_STRUCTURE)
         remaining_keys = sorted(list(set(env_values.keys()) - processed_keys))
@@ -516,12 +631,12 @@ class DockerOrchestrationManager:
                 f.write(content)
             self.log.info("Successfully wrote/updated '%s'.", self._ENV_FILE)
             if self.args.verbose:
-                 self.log.debug("--- .env Generation/Update Log ---")
-                 for key, comment in sorted(generation_log.items()):
-                     # Log only keys that ended up in the final env_values for clarity
-                     if key in env_values:
-                         self.log.debug(f"  - {key}: {comment}")
-                 self.log.debug(f"--- Final {self._ENV_FILE} Content ---\n{content}\n---")
+                self.log.debug("--- .env Generation/Update Log ---")
+                for key, comment in sorted(generation_log.items()):
+                    # Log only keys that ended up in the final env_values for clarity
+                    if key in env_values:
+                        self.log.debug(f"  - {key}: {comment}")
+                self.log.debug(f"--- Final {self._ENV_FILE} Content ---\n{content}\n---")
         except IOError as e:
             self.log.error("Failed to write generated/updated %s: %s", self._ENV_FILE, e)
             sys.exit(1)
@@ -529,73 +644,79 @@ class DockerOrchestrationManager:
         # Store final env_values for summary print
         self.final_env_values = env_values
 
-
     def _check_for_required_env_file(self):
         """Checks if .env exists; generates/updates if not or if missing critical secrets."""
         self.log.debug("Checking/Updating required '%s' file...", self._ENV_FILE)
         # Always run generate now, as it handles both creation and update logic
         self._generate_dot_env_file()
 
-
     # --- Helper to read .env file ---
     def _read_env_file(self, filepath):
         """Parses a .env file into a dictionary."""
         env_vars = {}
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith('#'):
+                    if not line or line.startswith("#"):
                         continue
                     # Improved regex to handle various quoting and comments
-                    match = re.match(r'^\s*(?:export\s+)?([\w.-]+)\s*=\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\'|([^#\s]*))?\s*(#.*)?$', line)
+                    match = re.match(
+                        r'^\s*(?:export\s+)?([\w.-]+)\s*=\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|\'([^\'\\]*(?:\\.[^\'\\]*)*)\'|([^#\s]*))?\s*(#.*)?$',
+                        line,
+                    )
                     if match:
                         key = match.group(1)
                         # Prioritize double-quoted, then single-quoted, then unquoted
-                        value = match.group(2) if match.group(2) is not None else \
-                                match.group(3) if match.group(3) is not None else \
-                                match.group(4) if match.group(4) is not None else ''
+                        value = (
+                            match.group(2)
+                            if match.group(2) is not None
+                            else (
+                                match.group(3)
+                                if match.group(3) is not None
+                                else match.group(4) if match.group(4) is not None else ""
+                            )
+                        )
                         # Handle basic escape sequences within quotes if necessary (simple version)
-                        if match.group(2) is not None: # Double quotes
-                             value = value.replace('\\"', '"').replace('\\\\', '\\')
-                        elif match.group(3) is not None: # Single quotes
-                             value = value.replace("\\'", "'").replace('\\\\', '\\')
+                        if match.group(2) is not None:  # Double quotes
+                            value = value.replace('\\"', '"').replace("\\\\", "\\")
+                        elif match.group(3) is not None:  # Single quotes
+                            value = value.replace("\\'", "'").replace("\\\\", "\\")
                         env_vars[key] = value
                     else:
-                         # Handle lines without '=' maybe? For now, ignore.
-                         self.log.debug(f"Could not parse line in {filepath}: {line}")
+                        # Handle lines without '=' maybe? For now, ignore.
+                        self.log.debug(f"Could not parse line in {filepath}: {line}")
 
         except FileNotFoundError:
             self.log.warning(f"Cannot read env file for summary: {filepath} not found.")
-            return None # Return None if not found
+            return None  # Return None if not found
         except Exception as e:
             self.log.error(f"Error reading env file {filepath}: {e}", exc_info=self.args.verbose)
-            return None # Return None on error
+            return None  # Return None on error
         return env_vars
 
     # --- Function to print key variables ---
     def _print_key_summary(self):
         """Reads the final .env file and prints a summary of important variables."""
         # Use the final state after generation/update
-        env_vars = getattr(self, 'final_env_values', None)
+        env_vars = getattr(self, "final_env_values", None)
 
         if env_vars is None:
-             # Fallback: Try reading the file directly if generation didn't store it
-             env_file_path = Path(self._ENV_FILE)
-             if env_file_path.exists():
-                 self.log.debug("Reading %s directly for summary print.", self._ENV_FILE)
-                 env_vars = self._read_env_file(env_file_path)
-                 source = f"'{self._ENV_FILE}'"
-             else:
-                  self.log.error("Cannot print key summary: .env data unavailable.")
-                  return
+            # Fallback: Try reading the file directly if generation didn't store it
+            env_file_path = Path(self._ENV_FILE)
+            if env_file_path.exists():
+                self.log.debug("Reading %s directly for summary print.", self._ENV_FILE)
+                env_vars = self._read_env_file(env_file_path)
+                source = f"'{self._ENV_FILE}'"
+            else:
+                self.log.error("Cannot print key summary: .env data unavailable.")
+                return
         else:
-             source = "current configuration"
+            source = "current configuration"
 
-
-        if env_vars is None: # Check again after fallback read attempt
-             self.log.error("Failed to read/obtain .env data for summary.")
-             return
+        if env_vars is None:  # Check again after fallback read attempt
+            self.log.error("Failed to read/obtain .env data for summary.")
+            return
 
         # Use standard print for visibility regardless of log level
         print("\n--- Key Configuration Summary (%s) ---" % source)
@@ -603,9 +724,9 @@ class DockerOrchestrationManager:
 
         for key in self._KEYS_TO_SUMMARIZE:
             value = env_vars.get(key)
-            display_value = "<Not Set>" # Use <Not Set> instead of <Not Set or Found>
-            if value is not None: # Check if key exists, even if empty string
-                display_value = value # Show the full value
+            display_value = "<Not Set>"  # Use <Not Set> instead of <Not Set or Found>
+            if value is not None:  # Check if key exists, even if empty string
+                display_value = value  # Show the full value
 
             # Use print directly
             print(f"  {key:<22}: {display_value}")
@@ -614,28 +735,29 @@ class DockerOrchestrationManager:
         # Add specific reminders based on key presence
         admin_key = env_vars.get("ADMIN_API_KEY")
         if admin_key:
-             print("  REMINDER: Use ADMIN_API_KEY for '--create-user' and")
-             print("            '--setup-assistant --exec-api-key'.")
+            print("  REMINDER: Use ADMIN_API_KEY for '--create-user' and")
+            print("            '--setup-assistant --exec-api-key'.")
         else:
-             # This shouldn't happen now if generation runs correctly
-             print("  WARNING: ADMIN_API_KEY not found. '--create-user' and")
-             print("           '--setup-assistant' will likely fail.")
+            # This shouldn't happen now if generation runs correctly
+            print("  WARNING: ADMIN_API_KEY not found. '--create-user' and")
+            print("           '--setup-assistant' will likely fail.")
         print("----------------------------------------------------\n")
-
 
     # --- Shared Path Configuration ---
     def _configure_shared_path(self):
         """Ensures SHARED_PATH is set in env and its directory exists."""
         system = platform.system().lower()
-        shared_path = os.environ.get("SHARED_PATH") # Check env var first
+        shared_path = os.environ.get("SHARED_PATH")  # Check env var first
         if not shared_path:
             # Try reading from .env if it exists, in case it was set manually
             env_file_path = Path(self._ENV_FILE)
             if env_file_path.exists():
-                 existing_env = self._read_env_file(env_file_path)
-                 if existing_env and existing_env.get("SHARED_PATH"):
-                      shared_path = existing_env.get("SHARED_PATH")
-                      self.log.info("Using SHARED_PATH found in existing %s: %s", self._ENV_FILE, shared_path)
+                existing_env = self._read_env_file(env_file_path)
+                if existing_env and existing_env.get("SHARED_PATH"):
+                    shared_path = existing_env.get("SHARED_PATH")
+                    self.log.info(
+                        "Using SHARED_PATH found in existing %s: %s", self._ENV_FILE, shared_path
+                    )
 
         # If still not found, determine default
         if not shared_path:
@@ -644,11 +766,15 @@ class DockerOrchestrationManager:
                 shared_path = os.path.join(default_base, "entities_share")
             elif system == "linux":
                 shared_path = os.path.join(default_base, ".local", "share", "entities_share")
-            elif system == "darwin": # macOS
-                shared_path = os.path.join(default_base, "Library", "Application Support", "entities_share")
+            elif system == "darwin":  # macOS
+                shared_path = os.path.join(
+                    default_base, "Library", "Application Support", "entities_share"
+                )
             else:
-                self.log.warning("Unsupported OS: %s. Defaulting SHARED_PATH to './entities_share'.", system)
-                shared_path = os.path.abspath("./entities_share") # Use absolute path
+                self.log.warning(
+                    "Unsupported OS: %s. Defaulting SHARED_PATH to './entities_share'.", system
+                )
+                shared_path = os.path.abspath("./entities_share")  # Use absolute path
 
             self.log.info("SHARED_PATH not set. Defaulting to: %s", shared_path)
 
@@ -665,7 +791,6 @@ class DockerOrchestrationManager:
             self.log.error("Failed to create shared directory %s: %s", shared_path, e)
             # Consider if this should be fatal
 
-
     # --- Docker Checks ---
     def _has_docker(self):
         """Checks if the 'docker' command is available."""
@@ -676,68 +801,92 @@ class DockerOrchestrationManager:
 
     def _is_container_running(self, container_name):
         """Checks if a container with the exact name is running."""
-        if not self._has_docker(): return False
+        if not self._has_docker():
+            return False
         try:
             # Added --format to potentially make parsing more reliable if needed, but quiet is fine
             result = self._run_command(
                 ["docker", "ps", "--filter", f"name=^{container_name}$", "--quiet"],
                 capture_output=True,
                 text=True,
-                check=False, # Don't fail if command runs but finds nothing
+                check=False,  # Don't fail if command runs but finds nothing
                 suppress_logs=True,
             )
             # Check return code AND if output is non-empty
             return result.returncode == 0 and bool(result.stdout.strip())
         except Exception as e:
-            self.log.error("Error checking if container '%s' is running: %s", container_name, e, exc_info=self.args.verbose)
+            self.log.error(
+                "Error checking if container '%s' is running: %s",
+                container_name,
+                e,
+                exc_info=self.args.verbose,
+            )
             return False
 
     def _is_image_present(self, image_name):
         """Checks if a specific Docker image exists locally."""
-        if not self._has_docker(): return False
+        if not self._has_docker():
+            return False
         try:
             result = self._run_command(
                 ["docker", "images", image_name, "--quiet"],
                 capture_output=True,
                 text=True,
-                check=False, # Don't fail if command runs but finds nothing
+                check=False,  # Don't fail if command runs but finds nothing
                 suppress_logs=True,
             )
             return result.returncode == 0 and bool(result.stdout.strip())
         except Exception as e:
-            self.log.error("Error checking if image '%s' exists: %s", image_name, e, exc_info=self.args.verbose)
+            self.log.error(
+                "Error checking if image '%s' exists: %s", image_name, e, exc_info=self.args.verbose
+            )
             return False
 
     def _has_nvidia_support(self):
         """Checks for NVIDIA GPU support via nvidia-smi."""
         nvidia_smi_path = None
         if platform.system() == "Windows":
-             # Check default Program Files path first
-             pf = os.environ.get("ProgramFiles", "C:\\Program Files")
-             nvidia_smi_path = os.path.join(pf, "NVIDIA Corporation\\NVSMI\\nvidia-smi.exe")
-             if not Path(nvidia_smi_path).is_file():
-                 nvidia_smi_path = shutil.which("nvidia-smi") # Fallback to PATH check
+            # Check default Program Files path first
+            pf = os.environ.get("ProgramFiles", "C:\\Program Files")
+            nvidia_smi_path = os.path.join(pf, "NVIDIA Corporation\\NVSMI\\nvidia-smi.exe")
+            if not Path(nvidia_smi_path).is_file():
+                nvidia_smi_path = shutil.which("nvidia-smi")  # Fallback to PATH check
         else:
-            nvidia_smi_path = shutil.which("nvidia-smi") # Check PATH on Linux/Mac
+            nvidia_smi_path = shutil.which("nvidia-smi")  # Check PATH on Linux/Mac
 
         if nvidia_smi_path and Path(nvidia_smi_path).is_file():
             self.log.debug("Found nvidia-smi at: %s", nvidia_smi_path)
             try:
                 # Run nvidia-smi, capture output, don't show its output unless verbose
-                result = self._run_command([nvidia_smi_path], check=True, capture_output=True, suppress_logs=not self.args.verbose)
+                result = self._run_command(
+                    [nvidia_smi_path],
+                    check=True,
+                    capture_output=True,
+                    suppress_logs=not self.args.verbose,
+                )
                 if result.returncode == 0:
-                     self.log.info("NVIDIA GPU support detected via nvidia-smi.")
-                     return True
+                    self.log.info("NVIDIA GPU support detected via nvidia-smi.")
+                    return True
                 else:
-                     # Should be caught by check=True, but handle just in case
-                     self.log.warning("nvidia-smi ran but exited with code %d. Output:\n%s\n%s", result.returncode, result.stdout, result.stderr)
-                     return False
+                    # Should be caught by check=True, but handle just in case
+                    self.log.warning(
+                        "nvidia-smi ran but exited with code %d. Output:\n%s\n%s",
+                        result.returncode,
+                        result.stdout,
+                        result.stderr,
+                    )
+                    return False
             except (subprocess.CalledProcessError, FileNotFoundError) as e:
-                self.log.warning("nvidia-smi found but failed to execute correctly. GPU support likely unavailable. Error: %s", e)
+                self.log.warning(
+                    "nvidia-smi found but failed to execute correctly. GPU support likely unavailable. Error: %s",
+                    e,
+                )
                 return False
             except Exception as e:
-                 self.log.error("Unexpected error checking nvidia-smi: %s", e, exc_info=self.args.verbose)
-                 return False
+                self.log.error(
+                    "Unexpected error checking nvidia-smi: %s", e, exc_info=self.args.verbose
+                )
+                return False
         else:
             self.log.debug("nvidia-smi command/executable not found.")
             return False
@@ -766,10 +915,16 @@ class DockerOrchestrationManager:
 
         self.log.info("Starting external Ollama container '%s'...", container_name)
         cmd = [
-            "docker", "run", "-d", "--rm",
-            "-v", "ollama:/root/.ollama", # Persist models
-            "-p", f"127.0.0.1:{self._OLLAMA_PORT}:{self._OLLAMA_PORT}", # Bind to localhost only by default
-            "--name", container_name,
+            "docker",
+            "run",
+            "-d",
+            "--rm",
+            "-v",
+            "ollama:/root/.ollama",  # Persist models
+            "-p",
+            f"127.0.0.1:{self._OLLAMA_PORT}:{self._OLLAMA_PORT}",  # Bind to localhost only by default
+            "--name",
+            container_name,
         ]
 
         # Add GPU support if requested and available
@@ -778,25 +933,36 @@ class DockerOrchestrationManager:
             # Insert --gpus flag after 'run'
             cmd.insert(2, "--gpus=all")
         elif not cpu_only:
-            self.log.warning("GPU requested for Ollama but unavailable/unsupported; starting CPU-only.")
+            self.log.warning(
+                "GPU requested for Ollama but unavailable/unsupported; starting CPU-only."
+            )
 
-        cmd.append(image_name) # Add the image name at the end
+        cmd.append(image_name)  # Add the image name at the end
 
         try:
             self._run_command(cmd, check=True)
             self.log.info("Waiting a few seconds for '%s' to initialize...", container_name)
-            time.sleep(5) # Give it a bit more time to start
+            time.sleep(5)  # Give it a bit more time to start
 
             if self._is_container_running(container_name):
-                self.log.info("External Ollama container '%s' started successfully.", container_name)
+                self.log.info(
+                    "External Ollama container '%s' started successfully.", container_name
+                )
                 return True
             else:
-                self.log.error("External Ollama container '%s' failed to start or exited quickly. Check logs.", container_name)
+                self.log.error(
+                    "External Ollama container '%s' failed to start or exited quickly. Check logs.",
+                    container_name,
+                )
                 try:
                     # Attempt to show logs on failure
-                    self._run_command(["docker", "logs", container_name], check=False, suppress_logs=False)
+                    self._run_command(
+                        ["docker", "logs", container_name], check=False, suppress_logs=False
+                    )
                 except Exception:
-                    self.log.warning("Could not fetch logs for failed Ollama container '%s'.", container_name)
+                    self.log.warning(
+                        "Could not fetch logs for failed Ollama container '%s'.", container_name
+                    )
                 return False
         except Exception as e:
             self.log.error("Failed to start Ollama: %s", e)
@@ -812,24 +978,34 @@ class DockerOrchestrationManager:
 
         # Avoid managing if running inside Docker or remote daemon detected
         if os.path.exists("/.dockerenv") or os.environ.get("DOCKER_HOST"):
-            self.log.warning("Running inside Docker or connected to a remote Docker daemon. Skipping external Ollama container management.")
+            self.log.warning(
+                "Running inside Docker or connected to a remote Docker daemon. Skipping external Ollama container management."
+            )
             return True
 
         if not self._has_docker():
             self.log.error("Docker command not found. Cannot manage external Ollama.")
             return False
 
-        if platform.system() == "Darwin": # macOS
-            self.log.warning("macOS detected. GPU passthrough for Docker Desktop has limitations. Ollama GPU support might not work as expected.")
+        if platform.system() == "Darwin":  # macOS
+            self.log.warning(
+                "macOS detected. GPU passthrough for Docker Desktop has limitations. Ollama GPU support might not work as expected."
+            )
 
         gpu_available = self._has_nvidia_support()
         attempt_gpu = use_gpu and gpu_available
         mode_str = "GPU" if attempt_gpu else "CPU"
 
-        if use_gpu and not gpu_available and platform.system() != "Darwin": # Don't warn unnecessarily on Mac where it's complex
-            self.log.warning("GPU requested for Ollama (--ollama-gpu) but NVIDIA support was not detected. Proceeding in CPU mode.")
+        if (
+            use_gpu and not gpu_available and platform.system() != "Darwin"
+        ):  # Don't warn unnecessarily on Mac where it's complex
+            self.log.warning(
+                "GPU requested for Ollama (--ollama-gpu) but NVIDIA support was not detected. Proceeding in CPU mode."
+            )
 
-        self.log.info("Ensuring external Ollama container is running (attempting %s mode)...", mode_str)
+        self.log.info(
+            "Ensuring external Ollama container is running (attempting %s mode)...", mode_str
+        )
         success = self._start_ollama(cpu_only=not attempt_gpu)
 
         self.log.info("--- End External Ollama Setup ---")
@@ -841,12 +1017,14 @@ class DockerOrchestrationManager:
         """Stops the stack, removes containers/volumes, and prunes Docker system."""
         self.log.warning("!!! NUKE MODE ACTIVATED !!!")
         self.log.warning("This will stop and remove the project's containers and volumes,")
-        self.log.warning("and then prune ALL unused Docker images, containers, networks, and volumes.")
+        self.log.warning(
+            "and then prune ALL unused Docker images, containers, networks, and volumes."
+        )
         self.log.warning("This affects your *entire* Docker installation, not just this project.")
 
         try:
             confirm = input("ARE YOU ABSOLUTELY SURE? Type 'confirm nuke' to proceed: ")
-        except EOFError: # Handle non-interactive environments
+        except EOFError:  # Handle non-interactive environments
             self.log.error("Nuke requires interactive confirmation. Aborting.")
             sys.exit(1)
 
@@ -859,19 +1037,27 @@ class DockerOrchestrationManager:
         # 1. Bring down the current stack defined by docker-compose.yml
         self.log.info("Step 1: Bringing down project stack (including volumes)...")
         try:
-            self._run_command(["docker", "compose", "down", "--volumes", "--remove-orphans"], check=False) # Don't fail nuke if down fails
+            self._run_command(
+                ["docker", "compose", "down", "--volumes", "--remove-orphans"], check=False
+            )  # Don't fail nuke if down fails
             self.log.info("Project stack 'down' command executed.")
         except Exception as e:
             self.log.warning("Error during 'docker compose down': %s. Continuing with prune.", e)
 
         # 2. Prune the entire Docker system
-        self.log.warning("Step 2: Pruning ALL Docker resources (images, containers, volumes, networks)...")
+        self.log.warning(
+            "Step 2: Pruning ALL Docker resources (images, containers, volumes, networks)..."
+        )
         try:
-            self._run_command(["docker", "system", "prune", "-a", "--volumes", "--force"], check=True)
+            self._run_command(
+                ["docker", "system", "prune", "-a", "--volumes", "--force"], check=True
+            )
             self.log.info("Docker system prune completed.")
         except Exception as e:
             self.log.critical("CRITICAL ERROR during 'docker system prune': %s", e)
-            self.log.error("The nuke operation failed during system prune. Manual cleanup might be required.")
+            self.log.error(
+                "The nuke operation failed during system prune. Manual cleanup might be required."
+            )
             sys.exit(1)
 
         self.log.info("Docker environment nuke completed successfully.")
@@ -879,43 +1065,66 @@ class DockerOrchestrationManager:
     def _handle_down(self):
         """Stops and potentially removes containers and volumes for the stack."""
         target_services = self.args.services or []
-        target_desc = f" for services: {', '.join(target_services)}" if target_services else " for all services"
-        action = "Stopping containers & removing associated volumes" if self.args.clear_volumes else "Stopping containers"
+        target_desc = (
+            f" for services: {', '.join(target_services)}"
+            if target_services
+            else " for all services"
+        )
+        action = (
+            "Stopping containers & removing associated volumes"
+            if self.args.clear_volumes
+            else "Stopping containers"
+        )
 
         self.log.info(f"{action}{target_desc}...")
 
         if self.args.clear_volumes:
-            self.log.warning("The '--clear-volumes' flag will remove anonymous volumes associated with the services.")
+            self.log.warning(
+                "The '--clear-volumes' flag will remove anonymous volumes associated with the services."
+            )
             self.log.warning("Named volumes defined in docker-compose.yml will also be removed.")
             try:
-                confirm = input(f"Confirm removal of volumes for {'these services' if target_services else 'ALL services'}? (yes/no): ").lower().strip()
+                confirm = (
+                    input(
+                        f"Confirm removal of volumes for {'these services' if target_services else 'ALL services'}? (yes/no): "
+                    )
+                    .lower()
+                    .strip()
+                )
             except EOFError:
                 self.log.error("Confirmation required for volume removal. Aborting.")
                 sys.exit(1)
 
             if confirm != "yes":
                 self.log.info("Volume deletion cancelled. Stopping containers only.")
-                self.args.clear_volumes = False # Ensure we don't pass --volumes later
+                self.args.clear_volumes = False  # Ensure we don't pass --volumes later
             elif target_services:
-                self.log.warning("Note: Targeted volume removal (down --volumes service_a) might not remove shared named volumes if they are still used by other non-targeted services defined in the compose file.")
+                self.log.warning(
+                    "Note: Targeted volume removal (down --volumes service_a) might not remove shared named volumes if they are still used by other non-targeted services defined in the compose file."
+                )
 
         # Construct docker compose down command
         down_cmd = ["docker", "compose", "down"]
         if self.args.clear_volumes:
             down_cmd.append("--volumes")
-        down_cmd.append("--remove-orphans") # Good practice
+        down_cmd.append("--remove-orphans")  # Good practice
 
         # If services are specified for down, pass them. Otherwise, down affects all.
         if target_services:
-             self.log.info("Stopping only specified services: %s.", ", ".join(target_services))
-             down_cmd.extend(target_services)
+            self.log.info("Stopping only specified services: %s.", ", ".join(target_services))
+            down_cmd.extend(target_services)
         else:
-             self.log.info("Stopping all services defined in compose file.")
-
+            self.log.info("Stopping all services defined in compose file.")
 
         try:
-            self._run_command(down_cmd, check=False) # Allow command to fail gracefully (e.g., if already down)
-            final_action_desc = "Stopped containers and removed volumes" if self.args.clear_volumes else "Stopped containers"
+            self._run_command(
+                down_cmd, check=False
+            )  # Allow command to fail gracefully (e.g., if already down)
+            final_action_desc = (
+                "Stopped containers and removed volumes"
+                if self.args.clear_volumes
+                else "Stopped containers"
+            )
             self.log.info("%s command completed.", final_action_desc)
         except Exception as e:
             self.log.error("Error during 'docker compose down': %s", e)
@@ -924,7 +1133,11 @@ class DockerOrchestrationManager:
     def _handle_build(self):
         """Builds Docker images defined in the compose file."""
         target_services = self.args.services or []
-        target_desc = f" for services: {', '.join(target_services)}" if target_services else " for all services"
+        target_desc = (
+            f" for services: {', '.join(target_services)}"
+            if target_services
+            else " for all services"
+        )
         cache_desc = " (using --no-cache)" if self.args.no_cache else ""
         parallel_desc = " (using --parallel)" if self.args.parallel else ""
 
@@ -953,25 +1166,32 @@ class DockerOrchestrationManager:
         # Regenerate docker-compose.yml right before 'up'
         self.log.info("Ensuring '%s' is up-to-date...", self._DOCKER_COMPOSE_FILE)
         try:
-             generate_docker_compose()
-             self.log.debug("'%s' generation/update check complete.", self._DOCKER_COMPOSE_FILE)
+            generate_docker_compose()
+            self.log.debug("'%s' generation/update check complete.", self._DOCKER_COMPOSE_FILE)
         except Exception as gen_e:
-             self.log.error(f"Error regenerating docker-compose.yml before 'up': {gen_e}", exc_info=self.args.verbose)
-             sys.exit(1)
+            self.log.error(
+                f"Error regenerating docker-compose.yml before 'up': {gen_e}",
+                exc_info=self.args.verbose,
+            )
+            sys.exit(1)
 
         mode = "attached" if self.args.attached else "detached (-d)"
         target_services = self.args.services or []
-        target_desc = f" services: {', '.join(target_services)}" if target_services else " all services"
+        target_desc = (
+            f" services: {', '.join(target_services)}" if target_services else " all services"
+        )
         force_opt = " (forcing recreation)" if self.args.force_recreate else ""
-        build_opt = " (building images first)" if self.args.build_first else "" # Changed from --build
+        build_opt = (
+            " (building images first)" if self.args.build_first else ""
+        )  # Changed from --build
 
         self.log.info(f"Starting {target_desc} in {mode} mode{force_opt}{build_opt}...")
 
         # Construct docker compose up command
         up_cmd = ["docker", "compose", "up"]
 
-        if self.args.build_first: # Changed flag name
-             up_cmd.append("--build")
+        if self.args.build_first:  # Changed flag name
+            up_cmd.append("--build")
         if not self.args.attached:
             up_cmd.append("-d")
         if self.args.force_recreate:
@@ -1004,11 +1224,12 @@ class DockerOrchestrationManager:
                 self._run_command(logs_cmd_fail, check=False, suppress_logs=False)
             except Exception as log_e:
                 self.log.error("Could not fetch logs after failure: %s", log_e)
-            sys.exit(1) # Exit after failed 'up'
+            sys.exit(1)  # Exit after failed 'up'
         except Exception as e:
-            self.log.critical("An unexpected error occurred during 'up': %s", e, exc_info=self.args.verbose)
-            sys.exit(1) # Exit after failed 'up'
-
+            self.log.critical(
+                "An unexpected error occurred during 'up': %s", e, exc_info=self.args.verbose
+            )
+            sys.exit(1)  # Exit after failed 'up'
 
     # --- Script Execution Handlers ---
     def _get_api_container_name(self):
@@ -1018,19 +1239,22 @@ class DockerOrchestrationManager:
             if api_service_config:
                 container_name = api_service_config.get("container_name")
                 if container_name:
-                     return container_name
+                    return container_name
 
         # Fallback if container_name not explicitly set in compose file
         # Try to construct based on project name (directory name usually)
-        project_name = Path.cwd().name.lower().replace('_', '').replace('-', '')
+        project_name = Path.cwd().name.lower().replace("_", "").replace("-", "")
         if project_name:
-             fallback_name = f"{project_name}-{API_SERVICE_NAME}-1"
-             self.log.debug("API container name not found in compose, trying fallback: %s", fallback_name)
-             return fallback_name
+            fallback_name = f"{project_name}-{API_SERVICE_NAME}-1"
+            self.log.debug(
+                "API container name not found in compose, trying fallback: %s", fallback_name
+            )
+            return fallback_name
 
-        self.log.warning("Could not determine specific API container name from compose or project directory.")
+        self.log.warning(
+            "Could not determine specific API container name from compose or project directory."
+        )
         return None
-
 
     def _is_api_service_running(self):
         """Checks specifically if the API service container is running."""
@@ -1038,39 +1262,77 @@ class DockerOrchestrationManager:
 
         if api_container_name:
             # Preferred method: check by specific container name
-             if self._is_container_running(api_container_name):
-                 self.log.debug("Container '%s' for service '%s' is running.", api_container_name, API_SERVICE_NAME)
-                 return True
-             else:
-                 # Check if maybe the fallback name was wrong, try compose ps
-                 self.log.debug("Container '%s' not found, checking via 'docker compose ps -q %s'", api_container_name, API_SERVICE_NAME)
-                 # Fallthrough to compose ps check
+            if self._is_container_running(api_container_name):
+                self.log.debug(
+                    "Container '%s' for service '%s' is running.",
+                    api_container_name,
+                    API_SERVICE_NAME,
+                )
+                return True
+            else:
+                # Check if maybe the fallback name was wrong, try compose ps
+                self.log.debug(
+                    "Container '%s' not found, checking via 'docker compose ps -q %s'",
+                    api_container_name,
+                    API_SERVICE_NAME,
+                )
+                # Fallthrough to compose ps check
         else:
-             self.log.warning("Could not determine specific container name for '%s'. Relying on 'docker compose ps'.", API_SERVICE_NAME)
+            self.log.warning(
+                "Could not determine specific container name for '%s'. Relying on 'docker compose ps'.",
+                API_SERVICE_NAME,
+            )
 
         # Fallback or if specific name check failed: Use docker compose ps
         try:
             result = self._run_command(
-                ["docker", "compose", "ps", "--status=running", "-q", API_SERVICE_NAME], # Get IDs of running containers for the service
-                capture_output=True, text=True, check=False, suppress_logs=True
+                [
+                    "docker",
+                    "compose",
+                    "ps",
+                    "--status=running",
+                    "-q",
+                    API_SERVICE_NAME,
+                ],  # Get IDs of running containers for the service
+                capture_output=True,
+                text=True,
+                check=False,
+                suppress_logs=True,
             )
             if result.returncode == 0 and result.stdout.strip():
-                self.log.info("Service '%s' appears to be running (found running container via compose ps).", API_SERVICE_NAME)
+                self.log.info(
+                    "Service '%s' appears to be running (found running container via compose ps).",
+                    API_SERVICE_NAME,
+                )
                 return True
             else:
-                self.log.error("Service '%s' does not appear to be running (checked via compose ps).", API_SERVICE_NAME)
+                self.log.error(
+                    "Service '%s' does not appear to be running (checked via compose ps).",
+                    API_SERVICE_NAME,
+                )
                 return False
         except Exception as e:
-             self.log.error("Error checking if service '%s' is running via compose ps: %s", API_SERVICE_NAME, e)
-             return False
-
+            self.log.error(
+                "Error checking if service '%s' is running via compose ps: %s", API_SERVICE_NAME, e
+            )
+            return False
 
     def _ensure_api_running_for_exec(self, action_name):
         """Checks if the API service is running before attempting an exec command."""
-        self.log.info("Checking if the '%s' service is running before executing '%s' script...", API_SERVICE_NAME, action_name)
+        self.log.info(
+            "Checking if the '%s' service is running before executing '%s' script...",
+            API_SERVICE_NAME,
+            action_name,
+        )
         if not self._is_api_service_running():
-            self.log.error("The '%s' service container must be running to execute this command.", API_SERVICE_NAME)
-            self.log.info("Please start the stack first, e.g., using: `python %s --mode up`", os.path.basename(__file__))
+            self.log.error(
+                "The '%s' service container must be running to execute this command.",
+                API_SERVICE_NAME,
+            )
+            self.log.info(
+                "Please start the stack first, e.g., using: `python %s --mode up`",
+                os.path.basename(__file__),
+            )
             sys.exit(1)
         self.log.debug("'%s' service confirmed running.", API_SERVICE_NAME)
 
@@ -1079,7 +1341,9 @@ class DockerOrchestrationManager:
         action_name = "bootstrap_admin"
         self._ensure_api_running_for_exec(action_name)
 
-        self.log.info("Running admin bootstrap script inside the '%s' container...", API_SERVICE_NAME)
+        self.log.info(
+            "Running admin bootstrap script inside the '%s' container...", API_SERVICE_NAME
+        )
         script_path = "/app/scripts/bootstrap_admin.py"
         # Use 'exec -it' for interactive scripts if needed, otherwise just 'exec'
         cmd = ["docker", "compose", "exec", API_SERVICE_NAME, "python", script_path]
@@ -1095,19 +1359,27 @@ class DockerOrchestrationManager:
         try:
             # Run the command attached, showing output directly
             # Use check=True to raise error on failure
-            self._run_command(cmd, check=True, suppress_logs=True, capture_output=False) # Suppress our logging of command, let script output speak
+            self._run_command(
+                cmd, check=True, suppress_logs=True, capture_output=False
+            )  # Suppress our logging of command, let script output speak
             self.log.info("Admin bootstrap script finished.")
             # The script itself should output the key. Reiterate the need to update .env.
             self.log.warning("Check the script output above for any generated ADMIN_API_KEY.")
             self.log.warning("If a new ADMIN_API_KEY was generated/shown, ensure it is correctly")
-            self.log.warning("reflected in your '%s' file for subsequent operations.", self._ENV_FILE)
+            self.log.warning(
+                "reflected in your '%s' file for subsequent operations.", self._ENV_FILE
+            )
             # Optionally re-print the summary if a key might have changed
             # self._print_key_summary()
         except subprocess.CalledProcessError:
             self.log.error("Admin bootstrap script failed. See output above for details.")
             sys.exit(1)
         except Exception as e:
-            self.log.critical("An unexpected error occurred during admin bootstrap: %s", e, exc_info=self.args.verbose)
+            self.log.critical(
+                "An unexpected error occurred during admin bootstrap: %s",
+                e,
+                exc_info=self.args.verbose,
+            )
             sys.exit(1)
 
     def _handle_create_user(self):
@@ -1116,7 +1388,10 @@ class DockerOrchestrationManager:
         self._ensure_api_running_for_exec(action_name)
 
         self.log.info("Running create user script inside the '%s' container...", API_SERVICE_NAME)
-        self.log.info("   (This script requires ADMIN_API_KEY to be correctly set in the container's environment, usually via '%s')", self._ENV_FILE)
+        self.log.info(
+            "   (This script requires ADMIN_API_KEY to be correctly set in the container's environment, usually via '%s')",
+            self._ENV_FILE,
+        )
         script_path = "/app/scripts/create_user.py"
         cmd = ["docker", "compose", "exec", API_SERVICE_NAME, "python", script_path]
 
@@ -1139,10 +1414,17 @@ class DockerOrchestrationManager:
             self.log.warning("and provide it to the user securely. It does NOT need to be")
             self.log.warning("added back into the system's '%s' file.", self._ENV_FILE)
         except subprocess.CalledProcessError:
-            self.log.error("Create user script failed. Verify ADMIN_API_KEY in '%s' is correct and see output above.", self._ENV_FILE)
+            self.log.error(
+                "Create user script failed. Verify ADMIN_API_KEY in '%s' is correct and see output above.",
+                self._ENV_FILE,
+            )
             sys.exit(1)
         except Exception as e:
-            self.log.critical("An unexpected error occurred during user creation: %s", e, exc_info=self.args.verbose)
+            self.log.critical(
+                "An unexpected error occurred during user creation: %s",
+                e,
+                exc_info=self.args.verbose,
+            )
             sys.exit(1)
 
     def _handle_setup_assistant(self):
@@ -1153,19 +1435,28 @@ class DockerOrchestrationManager:
         # --- VITAL: Check for required arguments for this specific script ---
         if not self.args.exec_api_key or not self.args.exec_user_id:
             self.log.error("Missing required arguments for '--setup-assistant'.")
-            self.log.error("You MUST provide both '--exec-api-key' (Admin API Key) and '--exec-user-id' (Admin User ID).")
+            self.log.error(
+                "You MUST provide both '--exec-api-key' (Admin API Key) and '--exec-user-id' (Admin User ID)."
+            )
             # Hint where to find the key/ID
-            self.log.info("Check the 'Key Configuration Summary' printed earlier or your '%s' file for the ADMIN_API_KEY.", self._ENV_FILE)
+            self.log.info(
+                "Check the 'Key Configuration Summary' printed earlier or your '%s' file for the ADMIN_API_KEY.",
+                self._ENV_FILE,
+            )
             self.log.info("The Admin User ID is typically output when running '--bootstrap-admin'.")
             sys.exit(1)
 
-        self.log.info("Running assistant setup script inside the '%s' container...", API_SERVICE_NAME)
+        self.log.info(
+            "Running assistant setup script inside the '%s' container...", API_SERVICE_NAME
+        )
         script_path = "/app/scripts/bootstrap_default_assistant.py"
 
         cmd = ["docker", "compose", "exec", API_SERVICE_NAME, "python", script_path]
 
         # Add the required arguments
-        self.log.info("   Using Admin API Key: %s...", self.args.exec_api_key[:6]) # Show prefix only
+        self.log.info(
+            "   Using Admin API Key: %s...", self.args.exec_api_key[:6]
+        )  # Show prefix only
         cmd.extend(["--api-key", self.args.exec_api_key])
         self.log.info("   Using Admin User ID: %s", self.args.exec_user_id)
         cmd.extend(["--user-id", self.args.exec_user_id])
@@ -1175,12 +1466,17 @@ class DockerOrchestrationManager:
             self._run_command(cmd, check=True, suppress_logs=True, capture_output=False)
             self.log.info("Assistant setup script finished.")
         except subprocess.CalledProcessError:
-            self.log.error("Assistant setup script failed. Ensure the provided Admin API key and User ID are correct and have admin privileges. See output above.")
+            self.log.error(
+                "Assistant setup script failed. Ensure the provided Admin API key and User ID are correct and have admin privileges. See output above."
+            )
             sys.exit(1)
         except Exception as e:
-            self.log.critical("An unexpected error occurred during assistant setup: %s", e, exc_info=self.args.verbose)
+            self.log.critical(
+                "An unexpected error occurred during assistant setup: %s",
+                e,
+                exc_info=self.args.verbose,
+            )
             sys.exit(1)
-
 
     # --- Main Execution Logic ---
     def run(self):
@@ -1192,7 +1488,10 @@ class DockerOrchestrationManager:
         if self.args.with_ollama:
             ollama_ok = self._ensure_ollama(opt_in=True, use_gpu=self.args.ollama_gpu)
             if not ollama_ok:
-                self.log.warning("External Ollama setup failed or was skipped. Continuing with requested action '%s'...", action)
+                self.log.warning(
+                    "External Ollama setup failed or was skipped. Continuing with requested action '%s'...",
+                    action,
+                )
 
         # Dispatch based on the primary action
         if action == "nuke":
@@ -1200,13 +1499,13 @@ class DockerOrchestrationManager:
         elif action == "down_only":
             self._handle_down()
         elif action == "up":
-            if self.args.down: # Handle --down flag for 'up' action
+            if self.args.down:  # Handle --down flag for 'up' action
                 self._handle_down()
             # Build action integrated into up via --build-first flag
-            #if self.args.build_first: self._handle_build() # Build is now handled by compose up --build
+            # if self.args.build_first: self._handle_build() # Build is now handled by compose up --build
             self._handle_up()
-        elif action == "build": # Added explicit build action
-             self._handle_build()
+        elif action == "build":  # Added explicit build action
+            self._handle_build()
         # --- Handle NEW script execution actions ---
         elif action == "bootstrap_admin":
             self._handle_bootstrap_admin()
@@ -1220,13 +1519,12 @@ class DockerOrchestrationManager:
 
         self.log.info("Orchestration script finished action: '%s'.", action)
 
-
     # --- Argument Parsing ---
     @staticmethod
     def parse_args():
         parser = argparse.ArgumentParser(
             description="Manage Docker Compose stack: build, up, down, generate .env, run setup scripts.",
-            formatter_class=argparse.RawTextHelpFormatter, # Allows better formatting in help
+            formatter_class=argparse.RawTextHelpFormatter,  # Allows better formatting in help
             epilog="""Examples:
   # Generate/Update .env, print summary, start all services detached
   python %(prog)s
@@ -1251,179 +1549,220 @@ class DockerOrchestrationManager:
 
   # Danger Zone: Stop stack and prune ALL Docker data
   python %(prog)s --nuke
-"""
+""",
         )
 
         # --- Action Group ---
         action_group = parser.add_mutually_exclusive_group(required=False)
         action_group.add_argument(
-            "--mode", choices=["up", "down_only"], dest="action",
+            "--mode",
+            choices=["up", "down_only"],
+            dest="action",
             help="Stack lifecycle action:\n"
-                 "  up:        Start services (default action if no other action specified).\n"
-                 "  down_only: Stop services (and optionally remove volumes)."
+            "  up:        Start services (default action if no other action specified).\n"
+            "  down_only: Stop services (and optionally remove volumes).",
         )
         action_group.add_argument(
-             "--build", action="store_const", const="build", dest="action",
-             help="Build or rebuild Docker images for the services."
+            "--build",
+            action="store_const",
+            const="build",
+            dest="action",
+            help="Build or rebuild Docker images for the services.",
         )
         action_group.add_argument(
-            "--bootstrap-admin", action="store_const", const="bootstrap_admin", dest="action",
+            "--bootstrap-admin",
+            action="store_const",
+            const="bootstrap_admin",
+            dest="action",
             help="Run bootstrap_admin.py script in the 'api' container.\n"
-                 "(Requires stack to be running)."
+            "(Requires stack to be running).",
         )
         action_group.add_argument(
-            "--create-user", action="store_const", const="create_user", dest="action",
+            "--create-user",
+            action="store_const",
+            const="create_user",
+            dest="action",
             help="Run create_user.py script in the 'api' container.\n"
-                 "(Requires stack running & ADMIN_API_KEY in .env)."
+            "(Requires stack running & ADMIN_API_KEY in .env).",
         )
         action_group.add_argument(
-            "--setup-assistant", action="store_const", const="setup_assistant", dest="action",
+            "--setup-assistant",
+            action="store_const",
+            const="setup_assistant",
+            dest="action",
             help="Run assistant_setup_service.py script in the 'api' container.\n"
-                 "(Requires stack running & --exec-api-key, --exec-user-id)."
+            "(Requires stack running & --exec-api-key, --exec-user-id).",
         )
         action_group.add_argument(
-            "--nuke", action="store_const", const="nuke", dest="action",
+            "--nuke",
+            action="store_const",
+            const="nuke",
+            dest="action",
             help="DANGER ZONE! Stop stack, remove project volumes, and prune ALL\n"
-                 "unused Docker data (images, containers, volumes, networks).\n"
-                 "Requires interactive confirmation."
+            "unused Docker data (images, containers, volumes, networks).\n"
+            "Requires interactive confirmation.",
         )
 
         # --- General Options ---
         parser.add_argument(
-            "--services", nargs="+", metavar="SERVICE",
-            help="Target specific service(s) for 'up', 'down', or 'build' actions."
+            "--services",
+            nargs="+",
+            metavar="SERVICE",
+            help="Target specific service(s) for 'up', 'down', or 'build' actions.",
         )
         parser.add_argument(
-            "--verbose", "--debug", dest="verbose", action="store_true",
-            help="Enable detailed debug logging."
+            "--verbose",
+            "--debug",
+            dest="verbose",
+            action="store_true",
+            help="Enable detailed debug logging.",
         )
 
         # --- Options for 'build' action ---
-        build_group = parser.add_argument_group('Options for --build')
+        build_group = parser.add_argument_group("Options for --build")
         build_group.add_argument(
-             "--no-cache", action="store_true",
-             help="Do not use cache when building images."
+            "--no-cache", action="store_true", help="Do not use cache when building images."
         )
         build_group.add_argument(
-             "--parallel", action="store_true",
-             help="Build images in parallel."
+            "--parallel", action="store_true", help="Build images in parallel."
         )
 
         # --- Options for 'up' mode ---
-        up_group = parser.add_argument_group('Options for --mode up')
+        up_group = parser.add_argument_group("Options for --mode up")
         up_group.add_argument(
-            "--down", action="store_true",
-            help="Run 'down' (stop services) before starting them with 'up'."
+            "--down",
+            action="store_true",
+            help="Run 'down' (stop services) before starting them with 'up'.",
         )
         up_group.add_argument(
-            "--build-first", action="store_true", # Renamed from --build for clarity
-            help="Run 'docker compose build' before 'up'."
+            "--build-first",
+            action="store_true",  # Renamed from --build for clarity
+            help="Run 'docker compose build' before 'up'.",
         )
         up_group.add_argument(
-            "--attached", action="store_true",
-            help="Run 'up' in attached mode (shows logs directly in terminal)."
+            "--attached",
+            action="store_true",
+            help="Run 'up' in attached mode (shows logs directly in terminal).",
         )
         up_group.add_argument(
-            "--force-recreate", action="store_true",
-            help="Recreate containers even if their configuration hasn't changed."
+            "--force-recreate",
+            action="store_true",
+            help="Recreate containers even if their configuration hasn't changed.",
         )
 
         # --- Options for 'down_only' mode (and implicit --down with 'up') ---
-        down_group = parser.add_argument_group('Options for --mode down_only (or --down with up)')
+        down_group = parser.add_argument_group("Options for --mode down_only (or --down with up)")
         down_group.add_argument(
-            "--clear-volumes", "-v", action="store_true",
+            "--clear-volumes",
+            "-v",
+            action="store_true",
             help="Remove volumes associated with the services when stopping.\n"
-                 "Prompts for confirmation."
+            "Prompts for confirmation.",
         )
 
         # --- Options for '--bootstrap-admin' ---
-        bootstrap_group = parser.add_argument_group('Options for --bootstrap-admin')
+        bootstrap_group = parser.add_argument_group("Options for --bootstrap-admin")
         bootstrap_group.add_argument(
-            "--bootstrap-db-url", metavar="URL",
+            "--bootstrap-db-url",
+            metavar="URL",
             help="Override the database connection URL passed to bootstrap_admin.py.\n"
-                 "(SECURITY: Avoid passing sensitive info directly on CLI if possible).\n"
-                 "Format: mysql+pymysql://user:pass@host:port/db"
+            "(SECURITY: Avoid passing sensitive info directly on CLI if possible).\n"
+            "Format: mysql+pymysql://user:pass@host:port/db",
         )
 
         # --- Options for '--create-user' ---
-        create_user_group = parser.add_argument_group('Options for --create-user')
+        create_user_group = parser.add_argument_group("Options for --create-user")
         create_user_group.add_argument(
-            "--user-email", metavar="EMAIL",
-            help="Specify the email for the new regular user."
+            "--user-email", metavar="EMAIL", help="Specify the email for the new regular user."
         )
         create_user_group.add_argument(
-            "--user-name", metavar="NAME",
-            help="Specify the full name for the new regular user."
+            "--user-name", metavar="NAME", help="Specify the full name for the new regular user."
         )
         create_user_group.add_argument(
-            "--user-key-name", metavar="KEY_NAME",
+            "--user-key-name",
+            metavar="KEY_NAME",
             help="Specify a custom name for the new user's initial API key.\n"
-                 "(Default: 'Default Initial Key')"
+            "(Default: 'Default Initial Key')",
         )
 
         # --- Options for '--setup-assistant' ---
-        setup_assistant_group = parser.add_argument_group('Options for --setup-assistant')
+        setup_assistant_group = parser.add_argument_group("Options for --setup-assistant")
         setup_assistant_group.add_argument(
-            "--exec-api-key", metavar="ADMIN_API_KEY",
+            "--exec-api-key",
+            metavar="ADMIN_API_KEY",
             help="Admin API key required by the assistant_setup_service.py script.\n"
-                 "(Must be provided for this action)."
+            "(Must be provided for this action).",
         )
         setup_assistant_group.add_argument(
-            "--exec-user-id", metavar="ADMIN_USER_ID",
+            "--exec-user-id",
+            metavar="ADMIN_USER_ID",
             help="Admin User ID required by the assistant_setup_service.py script.\n"
-                 "(Must be provided for this action)."
+            "(Must be provided for this action).",
         )
 
         # --- Options for External Ollama Management ---
-        ollama_group = parser.add_argument_group('External Ollama Options')
+        ollama_group = parser.add_argument_group("External Ollama Options")
         ollama_group.add_argument(
-            "--with-ollama", action="store_true",
+            "--with-ollama",
+            action="store_true",
             help="Manage an external Ollama container (start if not running).\n"
-                 "Useful if not running Ollama within the compose stack."
+            "Useful if not running Ollama within the compose stack.",
         )
         ollama_group.add_argument(
-            "--ollama-gpu", action="store_true",
+            "--ollama-gpu",
+            action="store_true",
             help="Attempt to start the external Ollama container with GPU support.\n"
-                 "(Requires --with-ollama and compatible NVIDIA drivers/Docker setup)."
+            "(Requires --with-ollama and compatible NVIDIA drivers/Docker setup).",
         )
 
         args = parser.parse_args()
 
         # --- Post-parsing Logic ---
         if args.action is None:
-            args.action = "up" # Default action is 'up'
+            args.action = "up"  # Default action is 'up'
             log.debug("No action specified, defaulting to '--mode up'.")
 
         if args.clear_volumes and args.action == "up":
             args.down = True
             log.debug("--clear-volumes implies --down when used with --mode up.")
         elif args.clear_volumes and args.action not in ["down_only"]:
-            log.warning("--clear-volumes is only applicable with --mode down_only or when using --down with --mode up. Flag ignored for action '%s'.", args.action)
+            log.warning(
+                "--clear-volumes is only applicable with --mode down_only or when using --down with --mode up. Flag ignored for action '%s'.",
+                args.action,
+            )
             args.clear_volumes = False
 
         if args.action == "nuke":
-             # Nuke implies down and clear volumes, ignore other flags
-             args.down = False # Nuke handles its own down sequence
-             args.clear_volumes = False
-             if args.with_ollama or args.services:
-                 log.debug("--nuke is exclusive. Ignoring --with-ollama, --services.")
-                 args.with_ollama = False
-                 args.services = None
+            # Nuke implies down and clear volumes, ignore other flags
+            args.down = False  # Nuke handles its own down sequence
+            args.clear_volumes = False
+            if args.with_ollama or args.services:
+                log.debug("--nuke is exclusive. Ignoring --with-ollama, --services.")
+                args.with_ollama = False
+                args.services = None
 
         # Cannot target services for nuke, bootstrap, create_user, setup_assistant
-        if args.services and args.action in ["nuke", "bootstrap_admin", "create_user", "setup_assistant"]:
-             log.warning("--services cannot be specified with --%s. Ignoring --services.", args.action)
-             args.services = None
+        if args.services and args.action in [
+            "nuke",
+            "bootstrap_admin",
+            "create_user",
+            "setup_assistant",
+        ]:
+            log.warning(
+                "--services cannot be specified with --%s. Ignoring --services.", args.action
+            )
+            args.services = None
 
         # Consolidate build flags
-        if args.action == 'build':
-             # Keep build-specific flags
-             pass
+        if args.action == "build":
+            # Keep build-specific flags
+            pass
         else:
-             # Ignore build flags if not build action
-             if args.no_cache: args.no_cache = False
-             if args.parallel: args.parallel = False
-
+            # Ignore build flags if not build action
+            if args.no_cache:
+                args.no_cache = False
+            if args.parallel:
+                args.parallel = False
 
         return args
 
@@ -1431,25 +1770,34 @@ class DockerOrchestrationManager:
 # --- Main Execution ---
 if __name__ == "__main__":
     # --- Generate docker-compose.yml FIRST ---
-    print(f"[{os.path.basename(__file__)}] Ensuring {DockerOrchestrationManager._DOCKER_COMPOSE_FILE} is present/updated...")
+    print(
+        f"[{os.path.basename(__file__)}] Ensuring {DockerOrchestrationManager._DOCKER_COMPOSE_FILE} is present/updated..."
+    )
     try:
         generate_docker_compose()
-        print(f"[{os.path.basename(__file__)}] {DockerOrchestrationManager._DOCKER_COMPOSE_FILE} generated/verified successfully.")
+        print(
+            f"[{os.path.basename(__file__)}] {DockerOrchestrationManager._DOCKER_COMPOSE_FILE} generated/verified successfully."
+        )
         time.sleep(0.2)
     except Exception as gen_e:
-        print(f"[{os.path.basename(__file__)}] CRITICAL ERROR: Failed to generate {DockerOrchestrationManager._DOCKER_COMPOSE_FILE}: {gen_e}", file=sys.stderr)
+        print(
+            f"[{os.path.basename(__file__)}] CRITICAL ERROR: Failed to generate {DockerOrchestrationManager._DOCKER_COMPOSE_FILE}: {gen_e}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # --- Configure root logger ---
     script_name = os.path.basename(__file__)
-    log_formatter = logging.Formatter(f"%(asctime)s [%(levelname)-7s] [{script_name}] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    log_formatter = logging.Formatter(
+        f"%(asctime)s [%(levelname)-7s] [{script_name}] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
     root_logger = logging.getLogger()
     if root_logger.hasHandlers():
         root_logger.handlers.clear()
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(log_formatter)
     root_logger.addHandler(stream_handler)
-    root_logger.setLevel(logging.INFO) # Initial level
+    root_logger.setLevel(logging.INFO)  # Initial level
 
     # --- Parse Arguments and Run ---
     log.info("Starting orchestration script...")
@@ -1466,7 +1814,7 @@ if __name__ == "__main__":
         # Initialize and run the manager
         # Initialization now handles .env generation/check and prints summary
         manager = DockerOrchestrationManager(arguments)
-        manager.run() # Dispatches to the appropriate action handler
+        manager.run()  # Dispatches to the appropriate action handler
 
     except KeyboardInterrupt:
         log.info("\nOperation cancelled by user (Ctrl+C).")
@@ -1476,11 +1824,13 @@ if __name__ == "__main__":
         sys.exit(e.returncode or 1)
     except FileNotFoundError as e:
         log.critical("A required command or file was not found: %s", e)
-        log.error("Please ensure Docker is installed and in your PATH, and all necessary scripts exist.")
+        log.error(
+            "Please ensure Docker is installed and in your PATH, and all necessary scripts exist."
+        )
         sys.exit(1)
     except SystemExit as e:
-         log.debug("Script exited with code %s.", e.code)
-         sys.exit(e.code)
+        log.debug("Script exited with code %s.", e.code)
+        sys.exit(e.code)
     except Exception as e:
         log.critical("An unexpected error occurred: %s", e, exc_info=True)
         sys.exit(1)
