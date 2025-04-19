@@ -1,27 +1,23 @@
-#!/usr/bin/env python3
+from pathlib import Path
 import secrets
 import uuid
-from pathlib import Path
 
-
-def generate_docker_compose():
-    # Resolve the project root (assuming script is under /scripts)
+def generate_orchestration_docker_compose():
+    # Resolve the project root
     script_dir = Path(__file__).resolve().parent
     project_root = script_dir.parent
     output_path = project_root / "docker-compose.yml"
 
-    # Abort if docker-compose.yml already exists
     if output_path.exists():
         print(f"⚠️  {output_path.name} already exists. Skipping generation.")
         return
 
-    # 🔐 Generate unique secrets
+    # Generate unique secrets
     unique_network_secret = str(uuid.uuid4())
     unique_root_password = uuid.uuid4().hex
     unique_mysql_password = uuid.uuid4().hex
     unique_default_secret = secrets.token_urlsafe(32)
 
-    # 🧱 Compose YAML content
     compose_yaml = f"""version: '3.8'
 
 services:
@@ -62,6 +58,17 @@ services:
     networks:
       - my_custom_network
 
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - my_custom_network
+
   api:
     image: thanosprime/entities-api-api:latest
     container_name: fastapi_cosmic_catalyst
@@ -73,6 +80,7 @@ services:
       - DEFAULT_SECRET_KEY={unique_default_secret}
       - SANDBOX_SERVER_URL=http://sandbox:8000
       - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
     ports:
       - "9000:9000"
     depends_on:
@@ -81,6 +89,8 @@ services:
       sandbox:
         condition: service_started
       qdrant:
+        condition: service_started
+      redis:
         condition: service_started
     volumes:
       - ./scripts:/app/scripts
@@ -134,6 +144,8 @@ volumes:
     driver: local
   qdrant_storage:
     driver: local
+  redis_data:
+    driver: local
 
 networks:
   my_custom_network:
@@ -142,16 +154,12 @@ networks:
       unique_secret: "{unique_network_secret}"
 """
 
-    # 💾 Write to file in project root
     output_path.write_text(compose_yaml, encoding="utf-8")
 
-    # ✅ Status output
     print("\n✅ docker-compose.yml generated at project root with:")
     print(f"  - MYSQL_ROOT_PASSWORD:  {unique_root_password}")
     print(f"  - MYSQL_PASSWORD:       {unique_mysql_password}")
     print(f"  - DEFAULT_SECRET_KEY:   {unique_default_secret}")
     print(f"  - Network Unique ID:    {unique_network_secret}\n")
 
-
-if __name__ == "__main__":
-    generate_docker_compose()
+generate_orchestration_docker_compose()
