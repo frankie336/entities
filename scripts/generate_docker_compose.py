@@ -1,6 +1,7 @@
-from pathlib import Path
 import secrets
 import uuid
+from pathlib import Path
+
 
 def generate_orchestration_docker_compose():
     # Resolve the project root
@@ -161,5 +162,6 @@ networks:
     print(f"  - MYSQL_PASSWORD:       {unique_mysql_password}")
     print(f"  - DEFAULT_SECRET_KEY:   {unique_default_secret}")
     print(f"  - Network Unique ID:    {unique_network_secret}\n")
+
 
 generate_orchestration_docker_compose()
