@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "entities_orchestration"
-version = "1.1.0"
+version = "1.2.0"
 description = "Development and deployment orchestrator for the Entities platform"
 readme = "README.md"
 authors = [

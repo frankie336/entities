@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/frankie336/entities/compare/v1.1.0...v1.2.0) (2025-04-19)
+
+
+### Features
+
+* Add Redis Server to yml ([1aa1c3b](https://github.com/frankie336/entities/commit/1aa1c3b2f426d86165afd81e68c7faad1a7dcadf))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
