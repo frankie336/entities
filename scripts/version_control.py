@@ -1,4 +1,4 @@
-# scripts/update_pyproject_versions.py
+#! scripts/update_pyproject_versions.py
 import re
 import sys
 from pathlib import Path
